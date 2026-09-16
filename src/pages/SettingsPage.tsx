@@ -1,0 +1,209 @@
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import clsx from "clsx";
+import { Sparkles } from "lucide-react";
+import { SectionHeading, Badge, Button, Card, Input } from "../components/ui";
+import { useWorkspaceStore } from "../store/useWorkspaceStore";
+import { useUIStore } from "../store/useUIStore";
+import { orchestrator } from "../ai/orchestrator";
+
+const TABS = ["Account", "Company", "Workforce", "AI", "Notifications", "Integrations", "Appearance"] as const;
+type Tab = (typeof TABS)[number];
+
+export default function SettingsPage() {
+  const [tab, setTab] = useState<Tab>("Account");
+
+  return (
+    <div className="space-y-6">
+      <SectionHeading eyebrow="Settings" title="Settings" description="Manage your account, company, and how Mero behaves." />
+      <div className="flex flex-wrap gap-1.5">
+        {TABS.map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={clsx(
+              "rounded-full border px-3.5 py-1.5 text-[12.5px] font-medium transition-colors",
+              tab === t ? "border-ink bg-ink text-paper" : "border-line text-ink-soft hover:border-ink-faint"
+            )}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+
+      {tab === "Account" && <AccountTab />}
+      {tab === "Company" && <CompanyTab />}
+      {tab === "Workforce" && <WorkforceTab />}
+      {tab === "AI" && <AITab />}
+      {tab === "Notifications" && <NotificationsTab />}
+      {tab === "Integrations" && <IntegrationsTab />}
+      {tab === "Appearance" && <AppearanceTab />}
+    </div>
+  );
+}
+
+function AccountTab() {
+  const user = useWorkspaceStore((s) => s.user);
+  const updateUser = useWorkspaceStore((s) => s.updateUser);
+  return (
+    <Card className="max-w-lg space-y-4 p-6">
+      <Field label="Name"><Input value={user.name} onChange={(e) => updateUser({ name: e.target.value })} /></Field>
+      <Field label="Email"><Input value={user.email} onChange={(e) => updateUser({ email: e.target.value })} type="email" /></Field>
+      <Field label="Role"><p className="text-[14px] capitalize text-ink">{user.role}</p></Field>
+      <p className="text-[12px] text-ink-faint">Account data is stored locally in your browser — there is no server-side account system in this build.</p>
+    </Card>
+  );
+}
+
+function CompanyTab() {
+  const company = useWorkspaceStore((s) => s.company)!;
+  const settings = useWorkspaceStore((s) => s.settings)!;
+  const updateSettings = useWorkspaceStore((s) => s.updateSettings);
+  return (
+    <Card className="max-w-lg space-y-4 p-6">
+      <Field label="Company">
+        <div className="flex items-center justify-between">
+          <p className="text-[14px] text-ink">{company.name}</p>
+          <Link to="/app/company" className="text-[12.5px] font-medium text-moss-600 hover:text-moss-700">Edit profile</Link>
+        </div>
+      </Field>
+      <Field label="Timezone"><p className="text-[14px] text-ink">{settings.timezone}</p></Field>
+      <Field label="Currency">
+        <select value={settings.currency} onChange={(e) => updateSettings({ currency: e.target.value })} className="rounded-xl border border-line bg-surface px-3.5 py-2.5 text-[14px] text-ink outline-none focus:border-ink">
+          {["USD", "EUR", "GBP", "CAD"].map((c) => <option key={c} value={c}>{c}</option>)}
+        </select>
+      </Field>
+    </Card>
+  );
+}
+
+function WorkforceTab() {
+  const allEmployees = useWorkspaceStore((s) => s.employees);
+  const employees = allEmployees.filter((e) => e.isHired);
+  const pauseEmployee = useWorkspaceStore((s) => s.pauseEmployee);
+  const activateEmployee = useWorkspaceStore((s) => s.activateEmployee);
+  return (
+    <Card className="max-w-lg divide-y divide-line p-2">
+      {employees.map((e) => (
+        <div key={e.id} className="flex items-center justify-between px-4 py-3">
+          <div>
+            <p className="text-[13.5px] font-medium text-ink">{e.name}</p>
+            <p className="text-[12px] text-ink-faint">{e.title}</p>
+          </div>
+          {e.status === "paused" ? (
+            <Button size="sm" variant="secondary" onClick={() => activateEmployee(e.id)}>Resume</Button>
+          ) : (
+            <Button size="sm" variant="ghost" onClick={() => pauseEmployee(e.id)}>Pause</Button>
+          )}
+        </div>
+      ))}
+    </Card>
+  );
+}
+
+function AITab() {
+  const settings = useWorkspaceStore((s) => s.settings)!;
+  const updateSettings = useWorkspaceStore((s) => s.updateSettings);
+  return (
+    <Card className="max-w-lg space-y-5 p-6">
+      <div className="flex items-center gap-2 rounded-xl border border-line bg-paper-dim px-4 py-3">
+        <Sparkles className="h-4 w-4 text-moss-500" />
+        <div>
+          <p className="text-[13px] font-semibold text-ink">{orchestrator.isLive ? "Live AI connected" : "Demo intelligence active"}</p>
+          <p className="text-[12px] text-ink-faint">
+            {orchestrator.isLive
+              ? "Responses are generated by your connected AI backend."
+              : "This static build simulates AI responses locally — no API key is used or stored in the browser."}
+          </p>
+        </div>
+      </div>
+      <Field label="Auto-approve risk threshold">
+        <select
+          value={settings.autoApproveUnderRisk}
+          onChange={(e) => updateSettings({ autoApproveUnderRisk: e.target.value as typeof settings.autoApproveUnderRisk })}
+          className="rounded-xl border border-line bg-surface px-3.5 py-2.5 text-[14px] text-ink outline-none focus:border-ink"
+        >
+          <option value="none">None — always ask me</option>
+          <option value="low">Low-risk actions only</option>
+          <option value="medium">Low & medium-risk actions</option>
+        </select>
+      </Field>
+    </Card>
+  );
+}
+
+function NotificationsTab() {
+  const settings = useWorkspaceStore((s) => s.settings)!;
+  const updateSettings = useWorkspaceStore((s) => s.updateSettings);
+  const rows: { key: keyof typeof settings; label: string }[] = [
+    { key: "notifyOnApprovalNeeded", label: "Notify me when something needs approval" },
+    { key: "notifyOnTaskFailed", label: "Notify me when a task fails" },
+    { key: "notifyOnDailyBriefing", label: "Send me the daily AI CEO briefing" },
+  ];
+  return (
+    <Card className="max-w-lg divide-y divide-line p-2">
+      {rows.map((r) => (
+        <label key={r.key} className="flex items-center justify-between gap-4 px-4 py-3">
+          <span className="text-[13.5px] text-ink">{r.label}</span>
+          <input
+            type="checkbox"
+            checked={Boolean(settings[r.key])}
+            onChange={(e) => updateSettings({ [r.key]: e.target.checked } as never)}
+            className="h-4 w-4 rounded border-line accent-[color:var(--color-ink)]"
+          />
+        </label>
+      ))}
+    </Card>
+  );
+}
+
+function IntegrationsTab() {
+  const integrations = useWorkspaceStore((s) => s.integrations);
+  const connected = integrations.filter((i) => i.status === "connected");
+  return (
+    <Card className="max-w-lg p-6">
+      <p className="text-[13.5px] text-ink-soft">{connected.length} of {integrations.length} integrations connected.</p>
+      <Link to="/app/integrations" className="mt-3 inline-block">
+        <Button size="sm" variant="secondary">Manage integrations</Button>
+      </Link>
+    </Card>
+  );
+}
+
+function AppearanceTab() {
+  const theme = useUIStore((s) => s.theme);
+  const setTheme = useUIStore((s) => s.setTheme);
+  return (
+    <Card className="max-w-lg p-6">
+      <p className="mb-3 text-[12.5px] font-medium text-ink-faint">Theme</p>
+      <div className="flex gap-2">
+        {(["light", "dark", "system"] as const).map((t) => (
+          <button
+            key={t}
+            onClick={() => setTheme(t)}
+            className={clsx(
+              "rounded-full border px-4 py-1.5 text-[12.5px] font-medium capitalize transition-colors",
+              theme === t ? "border-ink bg-ink text-paper" : "border-line text-ink-soft hover:border-ink-faint"
+            )}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+      {theme === "dark" && (
+        <p className="mt-3 text-[12px] text-ink-faint">
+          <Badge>Preview</Badge> <span className="ml-1">Dark mode is applied instantly across the app.</span>
+        </p>
+      )}
+    </Card>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-[12.5px] font-medium text-ink-faint">{label}</span>
+      {children}
+    </label>
+  );
+}
