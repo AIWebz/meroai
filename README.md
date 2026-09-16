@@ -14,7 +14,9 @@ Mero ships as a **fully static site**. There is no backend, no database, and
 no server that has to stay running. Everything — your company, its AI
 workforce, tasks, approvals, goals, and website — lives in your browser's
 `localStorage`. Refreshing the page restores your workspace exactly where you
-left it.
+left it. AI chat works out of the box in a local Demo mode, and can be
+upgraded to real Claude-powered responses by deploying one small, optional,
+separately-hosted backend — see [AI configuration](#ai-configuration).
 
 ## Features
 
@@ -50,17 +52,25 @@ left it.
   each clearly marked `Connect` or `Coming soon`. Nothing is ever shown as
   connected unless you connected it.
 
-## Demo mode, honestly
+## Demo mode and real AI, honestly
 
-This build's "AI" is a fully designed **demo intelligence layer**: local,
-rule-based logic that produces realistic, persona-appropriate responses with
-zero network calls and zero API keys. Every simulated response is visually
-labeled **Demo** in the UI. Metrics that require real data (revenue,
-customers, conversion, traffic) show *"Connect your data to see live
-metrics"* rather than an invented number.
+By default, Mero's "AI" is a fully designed **demo intelligence layer**:
+local, rule-based logic that produces realistic, persona-appropriate
+responses with zero network calls and zero API keys. Every simulated
+response is visually labeled **Demo** in the UI.
 
-The codebase is intentionally structured so a real AI backend can be
-connected later without a frontend rewrite — see [AI configuration](#ai-configuration) below.
+Real AI is also available: deploy the small backend in
+[`server/mero-ai-backend`](server/mero-ai-backend) and connect it in
+Settings → AI, and the AI CEO and every AI employee chat with the real
+[Claude API](https://claude.com/api) instead — see
+[AI configuration](#ai-configuration) below. If the backend is ever
+unreachable or misconfigured, Mero degrades gracefully back to a labeled
+demo response rather than breaking the chat.
+
+Metrics that require real business data (revenue, customers, conversion,
+traffic) always show *"Connect your data to see live metrics"* rather than
+an invented number — that's independent of whether AI chat is live or demo,
+and stays true either way.
 
 ## Tech stack
 
@@ -128,29 +138,56 @@ plain `BrowserRouter`.
 
 ## AI configuration
 
-**No AI API key is used or stored anywhere in this repository or the built
-site.** A private API key embedded in static frontend JavaScript is not
-secret — anyone can read it out of the shipped bundle — so this build
-deliberately ships with a local `DemoAIProvider` instead
-(`src/ai/demoProvider.ts`) that produces realistic responses without any
-network call.
-
-The AI layer is abstracted behind a single interface so a real backend can
-be added later without touching any page or component:
+**No AI API key is ever used or stored in this repository, the built site, or
+the browser.** A private API key embedded in static frontend JavaScript is
+not secret — anyone can read it out of the shipped bundle. Mero's AI layer is
+abstracted behind a single interface so it can run in either mode without any
+page or component caring which one is active:
 
 ```
 AIProvider  →  AIOrchestrator  →  AI CEO / AI Employees  →  Tasks
 ```
 
 - `src/ai/provider.ts` — the `AIProvider` interface every provider implements.
-- `src/ai/demoProvider.ts` — the local, no-network demo implementation used today.
-- `src/ai/orchestrator.ts` — routes chat and generates the AI CEO briefing; the only thing the UI talks to.
+- `src/ai/demoProvider.ts` — a local, no-network provider that produces realistic, clearly "Demo"-labeled responses. Always available, zero setup.
+- `src/ai/backendProvider.ts` — calls a secure backend you deploy yourself.
+- `src/ai/resolveProvider.ts` — picks between them based on your Settings → AI configuration.
+- `src/ai/orchestrator.ts` — routes chat through whichever provider is active; also builds the AI CEO briefing from local data (never a model call, so it's never fabricated).
 
-To connect a real model, implement `AIProvider` against a **secure backend
-you control** (a small server or edge function that holds the API key and
-proxies requests — never the browser), then pass that provider into
-`AIOrchestrator` in place of `demoProvider`. Nothing else in the app needs
-to change.
+### Demo mode (default, zero setup)
+
+Out of the box, Mero runs entirely in Demo mode — every AI response is
+generated locally and labeled **Demo** in the UI. This is what makes the
+GitHub Pages deployment fully self-contained with no account or key needed.
+
+### Connecting real AI
+
+This repo includes a ready-to-deploy secure backend at
+[`server/mero-ai-backend`](server/mero-ai-backend) — a small Cloudflare
+Worker that holds your Anthropic API key and calls the real
+[Claude API](https://claude.com/api) on the frontend's behalf. The key never
+leaves that worker; the frontend only ever holds the worker's URL and an
+optional shared secret, both entered in the app itself.
+
+```bash
+cd server/mero-ai-backend
+npm install
+npx wrangler login
+npx wrangler secret put ANTHROPIC_API_KEY
+npx wrangler secret put MERO_SHARED_SECRET
+npm run deploy
+```
+
+Then in Mero, go to **Settings → AI**, paste in the printed worker URL and
+your shared secret, click **Test connection**, and **Save**. The AI CEO and
+every AI employee will now answer using the real model — full setup and
+security notes are in [`server/mero-ai-backend/README.md`](server/mero-ai-backend/README.md).
+
+This backend is entirely optional and deployed separately from the static
+site — the GitHub Pages deployment itself never changes, and Mero falls back
+to Demo mode automatically if the backend is unreachable or not configured.
+Any backend that implements the same small JSON contract works — the bundled
+Worker is a reference implementation, not the only option.
 
 ## Data & persistence
 
@@ -165,19 +202,21 @@ can later be persisted through a real backend/API instead.
 
 ```
 mero/
-├── src/
-│   ├── ai/                # AIProvider, DemoAIProvider, orchestrator, personas
-│   ├── components/         # Shared UI primitives (Button, Card, Sidebar, ChatThread, ...)
-│   ├── data/               # Deterministic company/website/workforce generators + catalogs
-│   ├── features/           # Feature-scoped UI (company, workforce, tasks, goals, website, ai)
-│   ├── pages/               # Route-level pages
-│   ├── store/               # Zustand stores (workspace data + UI state)
-│   ├── types/               # Shared TypeScript data models
-│   ├── utils/                # Small formatting/id helpers
-│   ├── App.tsx               # Route table
-│   └── main.tsx              # Entry point (HashRouter)
+├── src/                     # The static frontend — this is what GitHub Pages deploys
+│   ├── ai/                  # AIProvider, DemoAIProvider, BackendAIProvider, orchestrator, personas
+│   ├── components/          # Shared UI primitives (Button, Card, Sidebar, ChatThread, ...)
+│   ├── data/                # Deterministic company/website/workforce generators + catalogs
+│   ├── features/            # Feature-scoped UI (company, workforce, tasks, goals, website, ai)
+│   ├── pages/                # Route-level pages
+│   ├── store/                # Zustand stores (workspace data, UI state, AI backend config)
+│   ├── types/                 # Shared TypeScript data models
+│   ├── utils/                  # Small formatting/id helpers
+│   ├── App.tsx                  # Route table
+│   └── main.tsx                  # Entry point (HashRouter)
 ├── public/                  # Static assets (favicon, ...)
-├── .github/workflows/deploy.yml   # GitHub Pages deployment workflow
+├── server/
+│   └── mero-ai-backend/     # Optional Cloudflare Worker — deployed separately, holds your Anthropic API key
+├── .github/workflows/deploy.yml   # GitHub Pages deployment workflow (builds only src/, not server/)
 ├── index.html
 └── vite.config.ts
 ```
@@ -186,9 +225,14 @@ mero/
 
 - **Real**: task/approval/goal state, workforce hiring, website editing,
   knowledge base, all local persistence, all navigation.
-- **Simulated (clearly labeled "Demo")**: AI chat responses, the company
-  blueprint generator, the AI CEO briefing content, and seeded example
-  activity/tasks/opportunities created when a company is first built.
+- **AI chat responses**: **Demo** by default (local, labeled); genuinely
+  **real** (Claude API, not labeled Demo) once you deploy and connect
+  `server/mero-ai-backend`.
+- **Always simulated regardless of AI mode**: the company blueprint
+  generator, the AI CEO briefing content (a template summary of your real
+  local data, not a model call), the website AI editor's rule-based command
+  parsing, and seeded example activity/tasks/opportunities created when a
+  company is first built.
 - **Honest empty states, never fabricated**: revenue, customers, leads,
   conversion, website visitors, analytics, and opportunity detection all
   require a connected integration and will say so instead of inventing a

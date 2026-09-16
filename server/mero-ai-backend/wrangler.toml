@@ -1,0 +1,11 @@
+name = "mero-ai-backend"
+main = "src/index.ts"
+compatibility_date = "2026-01-01"
+
+# Secrets (never put these here — set them with `wrangler secret put <NAME>`):
+#   ANTHROPIC_API_KEY   — your Claude API key
+#   MERO_SHARED_SECRET  — a string only you and your deployed Mero frontend know
+
+[vars]
+# Optional: override the model without redeploying code.
+MERO_MODEL = "claude-opus-5"

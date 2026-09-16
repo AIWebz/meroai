@@ -1,0 +1,20 @@
+{
+  "name": "mero-ai-backend",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Secure Cloudflare Worker that proxies Mero's AI chat requests to the Claude API, keeping the API key off the static frontend.",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.71.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260916.1",
+    "typescript": "^5.7.3",
+    "wrangler": "^4.0.0"
+  }
+}

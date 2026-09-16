@@ -4,7 +4,7 @@ import { SectionHeading, Card, DemoTag } from "../components/ui";
 import { ChatThread } from "../components/ChatThread";
 import { useAIChat } from "../features/ai/useAIChat";
 import { useWorkspaceStore } from "../store/useWorkspaceStore";
-import { orchestrator } from "../ai/orchestrator";
+import { generateBriefing } from "../ai/orchestrator";
 import { personaFor } from "../ai/personas";
 
 export default function OverviewPage() {
@@ -101,7 +101,7 @@ function BriefingPanel() {
   const [generatedAt, setGeneratedAt] = useState(() => new Date().toISOString());
 
   const briefing = useMemo(
-    () => orchestrator.generateBriefing({ company, employees, tasks, approvals, activity, opportunities }),
+    () => generateBriefing({ company, employees, tasks, approvals, activity, opportunities }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [company, employees, tasks, approvals, activity, opportunities, generatedAt]
   );
