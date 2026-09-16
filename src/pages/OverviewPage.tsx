@@ -10,8 +10,6 @@ import { personaFor } from "../ai/personas";
 export default function OverviewPage() {
   const company = useWorkspaceStore((s) => s.company)!;
   const tasks = useWorkspaceStore((s) => s.tasks);
-  const integrations = useWorkspaceStore((s) => s.integrations);
-  const hasConnectedData = integrations.some((i) => i.status === "connected");
   const activeTasks = tasks.filter((t) => t.status === "pending" || t.status === "working" || t.status === "awaiting_approval").length;
 
   const { messages, send, sending } = useAIChat("ceo", "ceo");
@@ -26,11 +24,11 @@ export default function OverviewPage() {
       />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
-        <MetricCard icon={TrendingUp} label="Revenue" value={hasConnectedData ? "$0" : null} />
-        <MetricCard icon={Users2} label="Customers" value={hasConnectedData ? "0" : null} />
-        <MetricCard icon={Target} label="Leads" value={hasConnectedData ? "0" : null} />
-        <MetricCard icon={Percent} label="Conversion" value={hasConnectedData ? "0%" : null} />
-        <MetricCard icon={Globe2} label="Website visitors" value={hasConnectedData ? "0" : null} />
+        <MetricCard icon={TrendingUp} label="Revenue" value={null} />
+        <MetricCard icon={Users2} label="Customers" value={null} />
+        <MetricCard icon={Target} label="Leads" value={null} />
+        <MetricCard icon={Percent} label="Conversion" value={null} />
+        <MetricCard icon={Globe2} label="Website visitors" value={null} />
         <MetricCard icon={ListChecks} label="Active tasks" value={String(activeTasks)} isLive />
       </div>
 

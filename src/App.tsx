@@ -16,7 +16,6 @@ import GoalsPage from "./pages/GoalsPage";
 import WebsiteBuilderPage from "./pages/WebsiteBuilderPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import KnowledgePage from "./pages/KnowledgePage";
-import IntegrationsPage from "./pages/IntegrationsPage";
 import SettingsPage from "./pages/SettingsPage";
 
 function RequireCompany({ children }: { children: React.ReactNode }) {
@@ -55,7 +54,6 @@ export default function App() {
         <Route path="website" element={<WebsiteBuilderPage />} />
         <Route path="analytics" element={<AnalyticsPage />} />
         <Route path="knowledge" element={<KnowledgePage />} />
-        <Route path="integrations" element={<IntegrationsPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

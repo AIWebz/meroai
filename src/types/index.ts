@@ -2,7 +2,7 @@
 // Mero data models
 //
 // These types describe the full product surface (company, workforce, tasks,
-// approvals, goals, website, knowledge, integrations...) independent of how
+// approvals, goals, website, knowledge...) independent of how
 // they are persisted. Today they are stored in the browser (see src/store).
 // A future backend can serialize/deserialize the same shapes over an API
 // without requiring a frontend rewrite.
@@ -281,24 +281,6 @@ export interface KnowledgeDocument {
   title: string;
   content: string;
   updatedAt: string;
-}
-
-// --- Integrations -----------------------------------------------------------
-
-export type IntegrationCategory =
-  | "communication"
-  | "commerce"
-  | "analytics"
-  | "productivity";
-
-export type IntegrationStatus = "connected" | "available" | "coming_soon";
-
-export interface Integration {
-  id: ID;
-  name: string;
-  category: IntegrationCategory;
-  description: string;
-  status: IntegrationStatus;
 }
 
 // --- Website -----------------------------------------------------------

@@ -9,7 +9,6 @@ import { useWorkspaceStore } from "../../store/useWorkspaceStore";
 export function useAIChat(personaId: string, threadId: string) {
   const [sending, setSending] = useState(false);
   const company = useWorkspaceStore((s) => s.company);
-  const integrations = useWorkspaceStore((s) => s.integrations);
   const addChatMessage = useWorkspaceStore((s) => s.addChatMessage);
   const chatMessages = useWorkspaceStore((s) => s.chatMessages);
   const messages = useMemo(() => chatMessages.filter((m) => m.threadId === threadId), [chatMessages, threadId]);
@@ -19,7 +18,6 @@ export function useAIChat(personaId: string, threadId: string) {
     addChatMessage({ threadId, role: "user", content: message, isDemo: false });
     setSending(true);
     try {
-      const hasConnectedData = integrations.some((i) => i.status === "connected");
       const persona = personaFor(personaId);
       const facts: Record<string, string> = {
         companyName: company.name,
@@ -31,7 +29,9 @@ export function useAIChat(personaId: string, threadId: string) {
         personaTitle: persona.title,
         personaTone: persona.tone,
         personaFocusAreas: persona.focusAreas.join(", "),
-        hasConnectedData: String(hasConnectedData),
+        // No connected data source exists yet — providers should treat this
+        // as false and avoid inventing specific business metrics.
+        hasConnectedData: "false",
       };
       // Short recent history so a live backend has conversational context.
       const history = messages.slice(-8).map((m) => ({ role: m.role, content: m.content }));

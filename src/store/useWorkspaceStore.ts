@@ -10,7 +10,6 @@ import type {
   Employee,
   EmployeeRoleKey,
   Goal,
-  Integration,
   KnowledgeDocument,
   Opportunity,
   Task,
@@ -32,7 +31,6 @@ import {
   seedTasks,
 } from "../data/seedGenerator";
 import { catalogFor } from "../data/employeeCatalog";
-import { INTEGRATIONS_CATALOG } from "../data/integrationsCatalog";
 
 const APPROVAL_KIND_LABEL: Record<ApprovalKind, string> = {
   publish_campaign: "Publish campaign",
@@ -56,7 +54,6 @@ interface WorkspaceState {
   goals: Goal[];
   opportunities: Opportunity[];
   knowledge: KnowledgeDocument[];
-  integrations: Integration[];
   website: Website | null;
   chatMessages: ChatMessage[];
 
@@ -97,10 +94,6 @@ interface WorkspaceState {
   // knowledge
   updateKnowledge: (docId: string, content: string) => void;
 
-  // integrations
-  connectIntegration: (integrationId: string) => void;
-  disconnectIntegration: (integrationId: string) => void;
-
   // website
   updateWebsite: (patch: Partial<Website>) => void;
   updateWebsiteComponent: (pageId: string, componentId: string, patch: Partial<WebsiteComponent>) => void;
@@ -123,7 +116,6 @@ export const useWorkspaceStore = create<WorkspaceState>()(
       goals: [],
       opportunities: [],
       knowledge: [],
-      integrations: INTEGRATIONS_CATALOG,
       website: null,
       chatMessages: [],
 
@@ -174,7 +166,6 @@ export const useWorkspaceStore = create<WorkspaceState>()(
           website,
           approvals,
           chatMessages: [],
-          integrations: INTEGRATIONS_CATALOG,
         });
       },
 
@@ -189,7 +180,6 @@ export const useWorkspaceStore = create<WorkspaceState>()(
           goals: [],
           opportunities: [],
           knowledge: [],
-          integrations: INTEGRATIONS_CATALOG,
           website: null,
           chatMessages: [],
         }),
@@ -401,15 +391,6 @@ export const useWorkspaceStore = create<WorkspaceState>()(
 
       updateKnowledge: (docId, content) =>
         set((s) => ({ knowledge: s.knowledge.map((k) => (k.id === docId ? { ...k, content, updatedAt: now() } : k)) })),
-
-      connectIntegration: (integrationId) =>
-        set((s) => ({
-          integrations: s.integrations.map((i) => (i.id === integrationId && i.status === "available" ? { ...i, status: "connected" } : i)),
-        })),
-      disconnectIntegration: (integrationId) =>
-        set((s) => ({
-          integrations: s.integrations.map((i) => (i.id === integrationId && i.status === "connected" ? { ...i, status: "available" } : i)),
-        })),
 
       updateWebsite: (patch) =>
         set((s) => (s.website ? { website: { ...s.website, ...patch, lastEditedAt: now() } } : s)),

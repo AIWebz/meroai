@@ -183,7 +183,7 @@ export function seedOpportunities(companyId: string): Opportunity[] {
       companyId,
       title: "Connect a data source to unlock opportunity detection",
       description: "Mero looks for patterns in connected sales, analytics, or CRM data to surface real opportunities. None are connected yet.",
-      recommendedAction: "Visit Integrations to connect a data source.",
+      recommendedAction: "Connect a real data source (like Stripe) to unlock this.",
       relatedEmployeeId: null,
       requiresIntegration: true,
       isDemo: true,

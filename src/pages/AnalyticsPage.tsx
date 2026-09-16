@@ -1,36 +1,22 @@
 import { Lightbulb, Link2, X } from "lucide-react";
-import { Link } from "react-router-dom";
 import { SectionHeading, Badge, Button, Card, DemoTag, EmptyState } from "../components/ui";
 import { useWorkspaceStore } from "../store/useWorkspaceStore";
 
 export default function AnalyticsPage() {
-  const integrations = useWorkspaceStore((s) => s.integrations);
   const allOpportunities = useWorkspaceStore((s) => s.opportunities);
   const opportunities = allOpportunities.filter((o) => !o.dismissed);
   const dismissOpportunity = useWorkspaceStore((s) => s.dismissOpportunity);
   const employees = useWorkspaceStore((s) => s.employees);
-  const hasConnectedData = integrations.some((i) => i.status === "connected");
 
   return (
     <div className="space-y-8">
       <SectionHeading eyebrow="Analytics" title="Analytics" description="Real analysis requires connected data. Nothing here is estimated or invented." />
 
-      {!hasConnectedData ? (
-        <EmptyState
-          icon={<Link2 className="h-6 w-6" />}
-          title="No data connected yet"
-          description="Connect Google Analytics, Stripe, Shopify, or another integration to see real traffic, revenue, and conversion analysis."
-          action={
-            <Link to="/app/integrations" className="mt-2 inline-block">
-              <Button>Go to Integrations</Button>
-            </Link>
-          }
-        />
-      ) : (
-        <Card className="p-6">
-          <p className="text-[13.5px] text-ink-faint">Live analytics will render here once connected data is flowing in.</p>
-        </Card>
-      )}
+      <EmptyState
+        icon={<Link2 className="h-6 w-6" />}
+        title="No data connected yet"
+        description="Traffic, revenue, and conversion analysis will appear here once a real data source is connected."
+      />
 
       <div>
         <div className="mb-3 flex items-center gap-2">
@@ -62,7 +48,7 @@ export default function AnalyticsPage() {
                   <div className="mt-3 flex items-center justify-between">
                     <span className="text-[12px] text-ink-faint">{employee ? `Flagged by ${employee.name}` : "Flagged by Mero"}</span>
                     {o.requiresIntegration ? (
-                      <Link to="/app/integrations" className="text-[12.5px] font-medium text-moss-600 hover:text-moss-700">Connect data</Link>
+                      <span className="text-[12.5px] font-medium text-ink-faint">Needs connected data</span>
                     ) : (
                       <Button size="sm" variant="secondary">Review</Button>
                     )}

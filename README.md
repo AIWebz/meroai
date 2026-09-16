@@ -48,9 +48,6 @@ separately-hosted backend — see [AI configuration](#ai-configuration).
   a real data source; nothing is fabricated.
 - **Knowledge base** — an editable company memory (description, brand voice,
   products, customers, policies, goals, decisions).
-- **Integrations** — Gmail, Shopify, Stripe, Google Analytics, and more,
-  each clearly marked `Connect` or `Coming soon`. Nothing is ever shown as
-  connected unless you connected it.
 
 ## Demo mode and real AI, honestly
 

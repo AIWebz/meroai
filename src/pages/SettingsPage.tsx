@@ -8,7 +8,7 @@ import { useUIStore } from "../store/useUIStore";
 import { useAIConfigStore } from "../store/useAIConfigStore";
 import { BackendAIProvider } from "../ai/backendProvider";
 
-const TABS = ["Account", "Company", "Workforce", "AI", "Notifications", "Integrations", "Appearance"] as const;
+const TABS = ["Account", "Company", "Workforce", "AI", "Notifications", "Appearance"] as const;
 type Tab = (typeof TABS)[number];
 
 export default function SettingsPage() {
@@ -37,7 +37,6 @@ export default function SettingsPage() {
       {tab === "Workforce" && <WorkforceTab />}
       {tab === "AI" && <AITab />}
       {tab === "Notifications" && <NotificationsTab />}
-      {tab === "Integrations" && <IntegrationsTab />}
       {tab === "Appearance" && <AppearanceTab />}
     </div>
   );
@@ -251,19 +250,6 @@ function NotificationsTab() {
           />
         </label>
       ))}
-    </Card>
-  );
-}
-
-function IntegrationsTab() {
-  const integrations = useWorkspaceStore((s) => s.integrations);
-  const connected = integrations.filter((i) => i.status === "connected");
-  return (
-    <Card className="max-w-lg p-6">
-      <p className="text-[13.5px] text-ink-soft">{connected.length} of {integrations.length} integrations connected.</p>
-      <Link to="/app/integrations" className="mt-3 inline-block">
-        <Button size="sm" variant="secondary">Manage integrations</Button>
-      </Link>
     </Card>
   );
 }

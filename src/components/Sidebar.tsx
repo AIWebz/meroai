@@ -10,7 +10,6 @@ import {
   Globe,
   BarChart3,
   BookOpen,
-  Plug,
   Settings,
   UserCircle,
   X,
@@ -28,7 +27,6 @@ const NAV_ITEMS = [
   { to: "/app/website", label: "Website", icon: Globe },
   { to: "/app/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/app/knowledge", label: "Knowledge", icon: BookOpen },
-  { to: "/app/integrations", label: "Integrations", icon: Plug },
 ];
 
 export function Sidebar({ mobileOpen, onCloseMobile }: { mobileOpen: boolean; onCloseMobile: () => void }) {
