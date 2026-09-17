@@ -14,17 +14,22 @@ Mero ships as a **fully static site**. There is no backend, no database, and
 no server that has to stay running. Everything — your company, its AI
 workforce, tasks, approvals, goals, and website — lives in your browser's
 `localStorage`. Refreshing the page restores your workspace exactly where you
-left it. AI chat works out of the box in a local Demo mode, and can be
-upgraded to a real model three ways: running one entirely in your browser
-(no key at all), pasting your own Anthropic API key into Settings, or
-standing up one small, optional backend — see
+left it.
+
+Real AI is required before you can build a company: the first step of
+company creation is turning on a live AI provider, either a model that runs
+entirely in your browser (no key at all) or a small backend you deploy
+yourself. Once it's on, that same live AI writes your company's website copy
+— hero, about, features, FAQ, and CTA — grounded in the idea you actually
+typed, not a fill-in-the-blanks template. See
 [AI configuration](#ai-configuration).
 
 ## Features
 
-- **AI Company Generator** — describe an idea, review an editable blueprint
-  (name, brand, offerings, goals, recommended workforce), and watch Mero
-  "build" the company.
+- **AI Company Generator** — turn on live AI, describe an idea, review an
+  editable blueprint (name, brand, offerings, goals, recommended workforce),
+  and watch Mero "build" the company, with your connected AI writing the
+  website copy live as part of that build.
 - **AI CEO** — a coordinating chat interface with a daily-briefing view
   (what happened, what was completed, problems, opportunities, approvals
   needed, recommended next actions).
@@ -42,10 +47,15 @@ standing up one small, optional backend — see
 - **Goals** — create goals with a target and deadline; progress is only ever
   shown when it comes from connected data, never invented.
 - **Website Builder** — a generated multi-page website with a component
-  model (hero, features, FAQ, testimonials, CTA, contact...), a desktop /
-  tablet / mobile preview, and an AI command box ("Create an FAQ section",
-  "Change the hero headline", "Make the homepage more premium") that edits
-  the site directly.
+  model (hero, features, pricing, FAQ, testimonials, CTA, contact...), a
+  desktop / tablet / mobile preview, and an AI command box ("Create an FAQ
+  section", "Change the hero headline", "Make the homepage more premium")
+  that edits the site directly.
+- **Stripe payment links** — connect a Stripe
+  [Payment Link](https://stripe.com/docs/payment-links) to any offering from
+  the Company page; the website's pricing section then renders a real "Buy
+  now" button straight to Stripe-hosted checkout, live, with no backend or
+  secret key on Mero's side.
 - **Opportunity Engine & Analytics** — honest empty states until you connect
   a real data source; nothing is fabricated.
 - **Knowledge base** — an editable company memory (description, brand voice,
@@ -53,26 +63,32 @@ standing up one small, optional backend — see
 
 ## Demo mode and real AI, honestly
 
-By default, Mero's "AI" is a fully designed **demo intelligence layer**:
-local, rule-based logic that produces realistic, persona-appropriate
-responses with zero network calls and zero API keys. Every simulated
-response is visually labeled **Demo** in the UI.
+Turning on live AI is **required** before you can build a company — it's
+the first step of the creation flow, and there's no way to skip it. This
+isn't optional the way it once was: your company's brand and website copy
+are written for real by whichever AI you connect, grounded in the idea you
+actually describe, so Mero needs a live provider before it can start.
 
-Real AI is also available, three ways: run a small open-weight model
-entirely in your browser via WebGPU (no key, ever), paste your own
-Anthropic key into Settings → AI (stored only in your browser, no deploy
-needed), or deploy the small backend in
-[`server/mero-ai-backend`](server/mero-ai-backend) and connect its URL
-instead. The in-browser model generates genuinely new text on-device; the
-other two routes chat with the real [Claude API](https://claude.com/api) —
-see [AI configuration](#ai-configuration) below. If live AI is ever
-unreachable or misconfigured, Mero degrades gracefully back to a labeled demo response
-rather than breaking the chat.
+Two ways to go live, both explained in that step: run a small open-weight
+model entirely in your browser via WebGPU (no key, ever), or deploy the
+small backend in [`server/mero-ai-backend`](server/mero-ai-backend) and
+connect its URL. The in-browser model generates genuinely new text
+on-device; the backend route chats with the real
+[Claude API](https://claude.com/api) — see
+[AI configuration](#ai-configuration) below.
+
+Once a company exists, everywhere else in the app (AI CEO chat, employee
+chats, the website AI editor) still degrades gracefully to a labeled
+**Demo** response if the live provider is ever unreachable or misconfigured
+— that fallback still exists for ongoing chat, it just doesn't apply to the
+one-time website-copy generation during creation, which instead falls back
+to a clearly non-AI deterministic template (see
+[What's real vs. simulated](#whats-real-vs-simulated)).
 
 Metrics that require real business data (revenue, customers, conversion,
 traffic) always show *"Connect your data to see live metrics"* rather than
-an invented number — that's independent of whether AI chat is live or demo,
-and stays true either way.
+an invented number — that's independent of AI mode, and stays true either
+way.
 
 ## Tech stack
 
@@ -152,18 +168,22 @@ AIProvider  →  AIOrchestrator  →  AI CEO / AI Employees  →  Tasks
 ```
 
 - `src/ai/provider.ts` — the `AIProvider` interface every provider implements.
-- `src/ai/demoProvider.ts` — a local, no-network provider that produces realistic, clearly "Demo"-labeled responses. Always available, zero setup.
+- `src/ai/demoProvider.ts` — a local, no-network provider that produces realistic, clearly "Demo"-labeled responses. Used for ongoing chat if live AI ever becomes unreachable after a company exists.
 - `src/ai/localModelProvider.ts` (+ `src/ai/localModel/engine.ts`) — runs a small open-weight model entirely in the browser via WebGPU. No key, ever.
-- `src/ai/directBrowserProvider.ts` — calls the real Claude API straight from the browser using a key you paste into Settings.
 - `src/ai/backendProvider.ts` — calls a secure backend you deploy yourself.
-- `src/ai/resolveProvider.ts` — picks between them (in-browser model → local key → backend → demo) based on your Settings → AI configuration.
+- `src/ai/resolveProvider.ts` — picks between them (in-browser model → backend → demo) and exposes `isAIEnabled()`, which gates the company creation flow.
 - `src/ai/orchestrator.ts` — routes chat through whichever provider is active; also builds the AI CEO briefing from local data (never a model call, so it's never fabricated).
+- `src/ai/generateWebsiteContent.ts` — asks the active live provider to write the new company's website copy as structured JSON, grounded in what you typed; used once, during creation.
 
-### Demo mode (default, zero setup)
+### The AI gate: Step 1 of company creation
 
-Out of the box, Mero runs entirely in Demo mode — every AI response is
-generated locally and labeled **Demo** in the UI. This is what makes the
-GitHub Pages deployment fully self-contained with no account or key needed.
+Going to **Build My Company** now opens on **"Turn on Mero's AI"** before
+anything else. You can't describe your company or see a blueprint until one
+of the two options below is live — there's no "skip" or demo-only path here,
+because the website copy this step unlocks is written by that live AI, not
+a template. Once a provider is enabled it's remembered (in `localStorage`,
+just like the rest of your workspace), so returning users don't see this
+step again unless they disable AI in Settings.
 
 ### Option 1: Run a real model in the browser (no key, ever)
 
@@ -183,28 +203,7 @@ support and shows a clear message, with an automatic fallback to Demo mode,
 if it isn't available). Response quality is noticeably below Claude — this
 is a genuinely small model, not a scaled-down version of a frontier one.
 
-### Option 2: Use your own key directly (fastest deploy-free option with Claude)
-
-Go to **Settings → AI** in the running app, paste an Anthropic API key from
-[console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys),
-and click **Save**. That's it — the AI CEO and every AI employee now answer
-using the real [Claude API](https://claude.com/api), called directly from
-your browser.
-
-The key is stored only in that browser's `localStorage` and sent only to
-Anthropic's API — never to any server of ours, and never written into any
-file in this repo. This is the standard "bring your own key" pattern used by
-many local-first AI tools. The tradeoff: the key is only as safe as that
-browser/device (anyone with access to it, or its dev tools, could read it
-back out), and it doesn't fit a deployment you'll share publicly — each
-visitor would need to paste in their own key. For that case, use Option 2.
-
-**Never paste your key anywhere except that Settings field** — not into a
-chat, an issue, a commit, or a source file. If a key is ever exposed that
-way, treat it as compromised and revoke/rotate it at
-[console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys).
-
-### Option 3: Deploy a secure backend (better for a shared deployment)
+### Option 2: Deploy a secure backend (better for a shared deployment)
 
 This repo includes a ready-to-deploy secure backend at
 [`server/mero-ai-backend`](server/mero-ai-backend) — a small Cloudflare
@@ -227,11 +226,39 @@ your shared secret under "Or connect a secure backend," click **Test
 connection**, and **Save** — full setup and security notes are in
 [`server/mero-ai-backend/README.md`](server/mero-ai-backend/README.md).
 
-This backend is entirely optional and deployed separately from the static
-site — the GitHub Pages deployment itself never changes, and Mero falls back
-to Demo mode automatically if none of the options above are configured or
-reachable. Any backend that implements the same small JSON contract works —
-the bundled Worker is a reference implementation, not the only option.
+This backend is deployed separately from the static site — the GitHub Pages
+deployment itself never changes. Any backend that implements the same small
+JSON contract works — the bundled Worker is a reference implementation, not
+the only option.
+
+### How the AI writes your website
+
+During creation, once a live provider is on, Mero asks it for the site's
+hero headline/subheadline, about section, three features, three FAQ items,
+and CTA copy as structured JSON — grounded in the exact idea text you typed
+plus the blueprint's industry, audience, and brand voice
+(`src/ai/generateWebsiteContent.ts`). If the provider errors, times out, or
+returns something that doesn't parse into valid content — which can happen
+with the smaller in-browser model in particular — Mero falls back per-field
+to the same deterministic template it always used
+(`src/data/websiteGenerator.ts`), so company creation never fails or
+produces a broken/empty site. When AI content is used, the activity feed
+records it plainly ("AI wrote the initial website copy"); when the fallback
+is used, it isn't claimed as AI-written anywhere.
+
+### Stripe payment links
+
+From the **Company** page, each offering has a **"+ Connect Stripe payment
+link"** action. Create a product and a
+[Payment Link](https://stripe.com/docs/payment-links) in your own Stripe
+Dashboard, then paste the resulting `https://buy.stripe.com/...` URL in.
+Mero validates it's a plausible `stripe.com` HTTPS link and stores it on
+that offering (`setOfferingPaymentLink` in
+`src/store/useWorkspaceStore.ts`). The website's pricing section then
+renders a live "Buy now" link straight to that Stripe-hosted checkout page
+for any connected offering, and a plain "Payment not connected" label for
+any that aren't — no backend, secret key, or webhook required on Mero's
+side, since Stripe hosts and handles the actual checkout.
 
 ## Data & persistence
 
@@ -247,10 +274,10 @@ can later be persisted through a real backend/API instead.
 ```
 mero/
 ├── src/                     # The static frontend — this is what GitHub Pages deploys
-│   ├── ai/                  # AIProvider, DemoAIProvider, LocalModelAIProvider, DirectBrowserAIProvider, BackendAIProvider, orchestrator, personas
+│   ├── ai/                  # AIProvider, DemoAIProvider, LocalModelAIProvider, BackendAIProvider, orchestrator, personas, generateWebsiteContent
 │   ├── components/          # Shared UI primitives (Button, Card, Sidebar, ChatThread, ...)
 │   ├── data/                # Deterministic company/website/workforce generators + catalogs
-│   ├── features/            # Feature-scoped UI (company, workforce, tasks, goals, website, ai)
+│   ├── features/            # Feature-scoped UI (company, workforce, tasks, goals, website, ai, EnableAIStep, OfferingPaymentLink)
 │   ├── pages/                # Route-level pages
 │   ├── store/                # Zustand stores (workspace data, UI state, AI backend config)
 │   ├── types/                 # Shared TypeScript data models
@@ -268,15 +295,24 @@ mero/
 ## What's real vs. simulated
 
 - **Real**: task/approval/goal state, workforce hiring, website editing,
-  knowledge base, all local persistence, all navigation.
-- **AI chat responses**: **Demo** by default (local, labeled); genuinely
-  **real** (not labeled Demo) once you enable the in-browser model, add
-  your own key, or connect `server/mero-ai-backend` in Settings → AI.
-- **Always simulated regardless of AI mode**: the company blueprint
-  generator, the AI CEO briefing content (a template summary of your real
-  local data, not a model call), the website AI editor's rule-based command
-  parsing, and seeded example activity/tasks/opportunities created when a
-  company is first built.
+  knowledge base, Stripe payment link storage and live checkout links, all
+  local persistence, all navigation.
+- **Website copy at creation time**: genuinely written by your connected
+  live AI (in-browser model or backend), grounded in the idea you typed —
+  not labeled Demo, since live AI is required before creation can start. If
+  that generation call fails, Mero falls back to a deterministic template
+  per-field rather than leaving the site broken; the activity feed only
+  credits the AI when its content was actually used.
+- **Ongoing AI chat responses** (AI CEO, employees, website AI editor):
+  genuinely real once a provider is live; degrades to a labeled **Demo**
+  response if the live provider becomes unreachable after the company
+  already exists.
+- **Always simulated regardless of AI mode**: the company blueprint's
+  structured fields (name, brand palette, goals) from the generator, the AI
+  CEO briefing content (a template summary of your real local data, not a
+  model call), the website AI editor's rule-based command parsing, and
+  seeded example activity/tasks/opportunities created when a company is
+  first built.
 - **Honest empty states, never fabricated**: revenue, customers, leads,
   conversion, website visitors, analytics, and opportunity detection all
   require a connected data source and will say so instead of inventing a

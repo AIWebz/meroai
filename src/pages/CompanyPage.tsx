@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Check, Pencil } from "lucide-react";
 import { SectionHeading, Card, Input, TextArea, Button, DemoTag } from "../components/ui";
 import { useWorkspaceStore } from "../store/useWorkspaceStore";
+import { OfferingPaymentLink } from "../features/company/OfferingPaymentLink";
 
 export default function CompanyPage() {
   const company = useWorkspaceStore((s) => s.company)!;
@@ -112,6 +113,7 @@ export default function CompanyPage() {
               </div>
               <p className="mt-1 text-[13px] leading-relaxed text-ink-faint">{o.description}</p>
               <p className="mt-1.5 text-[12px] text-ink-faint/80">Positioning: {o.positioning}</p>
+              <OfferingPaymentLink offering={o} />
             </div>
           ))}
         </div>

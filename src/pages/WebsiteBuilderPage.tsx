@@ -148,7 +148,7 @@ export default function WebsiteBuilderPage() {
                 <DeviceButton icon={Smartphone} active={device === "mobile"} onClick={() => setDevice("mobile")} />
               </div>
             </div>
-            <WebsitePreview website={website} page={page} device={device} />
+            <WebsitePreview website={website} page={page} device={device} offerings={company.offerings} />
           </Card>
         </div>
       </div>

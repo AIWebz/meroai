@@ -11,7 +11,8 @@ import { getOrCreateEngine } from "./localModel/engine";
 // ---------------------------------------------------------------------------
 
 const MAX_HISTORY_MESSAGES = 8;
-const MAX_TOKENS = 300;
+const CHAT_MAX_TOKENS = 300;
+const JSON_MAX_TOKENS = 900;
 
 export class LocalModelAIProvider implements AIProvider {
   readonly id = "local-model";
@@ -32,7 +33,7 @@ export class LocalModelAIProvider implements AIProvider {
         { role: "user", content: message },
       ],
       temperature: 0.7,
-      max_tokens: MAX_TOKENS,
+      max_tokens: facts.responseFormat === "json" ? JSON_MAX_TOKENS : CHAT_MAX_TOKENS,
     });
 
     const content = completion.choices[0]?.message?.content?.trim() ?? "";

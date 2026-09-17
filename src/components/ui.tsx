@@ -123,3 +123,12 @@ export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
     />
   );
 }
+
+export function Field({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-[12.5px] font-medium text-ink-faint">{label}</span>
+      {children}
+    </label>
+  );
+}

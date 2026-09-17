@@ -16,7 +16,7 @@ export function IdeaStep({ onSubmit }: { onSubmit: (idea: string) => void }) {
 
       <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center py-16">
         <div className="animate-fade-up text-center">
-          <p className="mb-3 text-[12px] font-semibold uppercase tracking-wider text-moss-600">Step 1 of 3</p>
+          <p className="mb-3 text-[12px] font-semibold uppercase tracking-wider text-moss-600">Step 2 of 4</p>
           <h1 className="font-display text-[32px] font-semibold leading-tight text-ink md:text-[38px]">
             What company do you want to build?
           </h1>

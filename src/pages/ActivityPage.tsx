@@ -9,6 +9,7 @@ import {
   Building2,
   Lightbulb,
   XCircle,
+  CreditCard,
 } from "lucide-react";
 import { SectionHeading, Card, DemoTag, EmptyState } from "../components/ui";
 import { useWorkspaceStore } from "../store/useWorkspaceStore";
@@ -28,6 +29,7 @@ const ICONS: Record<ActivityKind, React.ComponentType<{ className?: string }>> =
   website_edited: Globe,
   company_created: Building2,
   opportunity_detected: Lightbulb,
+  payment_connected: CreditCard,
 };
 
 export default function ActivityPage() {

@@ -13,7 +13,18 @@ const STEPS = [
   "Preparing your company",
 ];
 
-export function CreationAnimationStep({ onComplete }: { onComplete: () => void }) {
+// "Designing your website" is the step where a real, live AI call happens
+// (see useWorkspaceStore.createCompany) — every other step here is local
+// bookkeeping, shown on a timer for pacing/feel.
+const AI_STEP_INDEX = STEPS.indexOf("Designing your website");
+
+export function CreationAnimationStep({
+  websiteReady,
+  onComplete,
+}: {
+  websiteReady: Promise<void> | null;
+  onComplete: () => void;
+}) {
   const [doneCount, setDoneCount] = useState(0);
 
   useEffect(() => {
@@ -21,9 +32,23 @@ export function CreationAnimationStep({ onComplete }: { onComplete: () => void }
       const t = setTimeout(onComplete, 500);
       return () => clearTimeout(t);
     }
+
+    if (doneCount === AI_STEP_INDEX && websiteReady) {
+      let cancelled = false;
+      const minDisplayTime = new Promise<void>((resolve) => setTimeout(resolve, 700));
+      Promise.all([websiteReady, minDisplayTime]).then(() => {
+        if (!cancelled) setDoneCount((c) => c + 1);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }
+
     const t = setTimeout(() => setDoneCount((c) => c + 1), 420);
     return () => clearTimeout(t);
-  }, [doneCount, onComplete]);
+  }, [doneCount, onComplete, websiteReady]);
+
+  const waitingOnAI = doneCount === AI_STEP_INDEX && Boolean(websiteReady);
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-paper px-6">
@@ -47,13 +72,17 @@ export function CreationAnimationStep({ onComplete }: { onComplete: () => void }
                 </span>
                 <span className={"text-[14px] transition-colors duration-300 " + (complete || active ? "text-ink" : "text-ink-faint/60")}>
                   {step}
+                  {active && i === AI_STEP_INDEX && waitingOnAI && (
+                    <span className="ml-1.5 text-[12px] text-ink-faint">— writing with your AI…</span>
+                  )}
                 </span>
               </li>
             );
           })}
         </ul>
         <p className="mt-8 text-center text-[12px] text-ink-faint/70">
-          Simulated build sequence — Mero generates this demo company locally in your browser.
+          Your website copy is written live by your connected AI — everything else here is prepared locally in your
+          browser.
         </p>
       </div>
     </div>

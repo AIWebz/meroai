@@ -50,7 +50,7 @@ export function BlueprintReviewStep({
     <div className="min-h-screen bg-paper px-6 py-10">
       <div className="mx-auto max-w-3xl">
         <div className="animate-fade-up text-center">
-          <p className="mb-2 text-[12px] font-semibold uppercase tracking-wider text-moss-600">Step 2 of 3</p>
+          <p className="mb-2 text-[12px] font-semibold uppercase tracking-wider text-moss-600">Step 3 of 4</p>
           <h1 className="font-display text-[30px] font-semibold text-ink">Your company blueprint</h1>
           <p className="mt-2 text-[14.5px] text-ink-faint">Everything here is editable. Adjust anything before Mero builds it.</p>
         </div>

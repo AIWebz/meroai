@@ -21,6 +21,8 @@ import type {
 import { id, now } from "../utils/id";
 import { generateBlueprint, type CompanyBlueprint } from "../data/companyGenerator";
 import { generateWebsite } from "../data/websiteGenerator";
+import { generateWebsiteContentWithAI } from "../ai/generateWebsiteContent";
+import { resolveAIProvider } from "../ai/resolveProvider";
 import {
   seedActivity,
   seedApprovals,
@@ -58,10 +60,11 @@ interface WorkspaceState {
   chatMessages: ChatMessage[];
 
   // company lifecycle
-  createCompany: (blueprint: CompanyBlueprint, originalIdea: string, hiredKeys: EmployeeRoleKey[]) => void;
+  createCompany: (blueprint: CompanyBlueprint, originalIdea: string, hiredKeys: EmployeeRoleKey[]) => Promise<void>;
   resetWorkspace: () => void;
   updateCompany: (patch: Partial<Company>) => void;
   updateSettings: (patch: Partial<CompanySettings>) => void;
+  setOfferingPaymentLink: (offeringId: string, url: string | null) => void;
   updateUser: (patch: Partial<User>) => void;
 
   // workforce
@@ -119,7 +122,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
       website: null,
       chatMessages: [],
 
-      createCompany: (blueprint, originalIdea, hiredKeys) => {
+      createCompany: async (blueprint, originalIdea, hiredKeys) => {
         const companyId = id("company");
         const company: Company = {
           id: companyId,
@@ -151,8 +154,26 @@ export const useWorkspaceStore = create<WorkspaceState>()(
         const activity = seedActivity(companyId, company.name, employees, tasks);
         const opportunities = seedOpportunities(companyId);
         const knowledge = seedKnowledge(companyId, blueprint);
-        const website = generateWebsite(companyId, blueprint);
         const approvals = seedApprovals(companyId, employees);
+
+        // The AI CEO/workforce write the website copy for real, grounded in
+        // what the founder actually described — not a template. If the live
+        // provider errors or returns something unusable, fall back to the
+        // deterministic template rather than leaving the site broken.
+        const aiContent = await generateWebsiteContentWithAI(resolveAIProvider(), originalIdea, blueprint).catch(() => null);
+        const website = generateWebsite(companyId, blueprint, aiContent);
+        if (aiContent) {
+          activity.unshift({
+            id: id("act"),
+            companyId,
+            employeeId: employees.find((e) => e.roleKey === "developer")?.id ?? null,
+            kind: "website_edited",
+            title: "AI wrote the initial website copy",
+            description: "Hero, about, features, FAQ, and CTA copy generated live from your company description.",
+            createdAt: now(),
+            isDemo: false,
+          });
+        }
 
         set({
           company,
@@ -186,6 +207,30 @@ export const useWorkspaceStore = create<WorkspaceState>()(
 
       updateCompany: (patch) => set((s) => (s.company ? { company: { ...s.company, ...patch } } : s)),
       updateSettings: (patch) => set((s) => (s.settings ? { settings: { ...s.settings, ...patch } } : s)),
+      setOfferingPaymentLink: (offeringId, url) => {
+        set((s) => {
+          if (!s.company) return s;
+          return {
+            company: {
+              ...s.company,
+              offerings: s.company.offerings.map((o) =>
+                o.id === offeringId ? { ...o, stripePaymentLinkUrl: url ?? undefined } : o
+              ),
+            },
+          };
+        });
+        const company = get().company;
+        const offering = company?.offerings.find((o) => o.id === offeringId);
+        if (company && offering) {
+          get().logActivity({
+            employeeId: null,
+            kind: "payment_connected",
+            title: url ? `Connected Stripe payment link for ${offering.name}` : `Removed Stripe payment link for ${offering.name}`,
+            description: url ?? "No payment link connected.",
+            isDemo: false,
+          });
+        }
+      },
       updateUser: (patch) => set((s) => ({ user: { ...s.user, ...patch } })),
 
       hireEmployee: (roleKey) => {

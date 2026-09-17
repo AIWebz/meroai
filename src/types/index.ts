@@ -42,6 +42,8 @@ export interface Offering {
   description: string;
   pricingConcept: string;
   positioning: string;
+  /** A real Stripe Payment Link (buy.stripe.com/...) the user created in their own Stripe Dashboard. Undefined until connected. */
+  stripePaymentLinkUrl?: string;
 }
 
 export interface CompanyGoalSummary {
@@ -217,7 +219,8 @@ export type ActivityKind =
   | "goal_updated"
   | "website_edited"
   | "company_created"
-  | "opportunity_detected";
+  | "opportunity_detected"
+  | "payment_connected";
 
 export interface Activity {
   id: ID;
@@ -302,7 +305,7 @@ export interface WebsiteComponent {
   heading?: string;
   subheading?: string;
   body?: string;
-  items?: { title: string; description: string }[];
+  items?: { title: string; description: string; meta?: string; url?: string }[];
   buttonLabel?: string;
 }
 

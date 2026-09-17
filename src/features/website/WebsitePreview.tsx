@@ -1,4 +1,4 @@
-import type { Website, WebsiteComponent, WebsitePage } from "../../types";
+import type { Offering, Website, WebsiteComponent, WebsitePage } from "../../types";
 
 export type PreviewDevice = "desktop" | "tablet" | "mobile";
 
@@ -8,7 +8,18 @@ const DEVICE_WIDTH: Record<PreviewDevice, string> = {
   mobile: "375px",
 };
 
-export function WebsitePreview({ website, page, device }: { website: Website; page: WebsitePage; device: PreviewDevice }) {
+export function WebsitePreview({
+  website,
+  page,
+  device,
+  offerings,
+}: {
+  website: Website;
+  page: WebsitePage;
+  device: PreviewDevice;
+  /** When provided, the "pricing" component renders live from these (title/price/Stripe link) instead of its stored snapshot, so a payment link connected after the site was generated shows up immediately. */
+  offerings?: Offering[];
+}) {
   return (
     <div className="flex justify-center overflow-x-auto bg-paper-dim p-4">
       <div
@@ -27,7 +38,7 @@ export function WebsitePreview({ website, page, device }: { website: Website; pa
         </div>
         <div>
           {page.components.map((c) => (
-            <PreviewComponent key={c.id} component={c} accent={website.theme.primaryColor} />
+            <PreviewComponent key={c.id} component={c} accent={website.theme.primaryColor} offerings={offerings} />
           ))}
         </div>
       </div>
@@ -35,7 +46,19 @@ export function WebsitePreview({ website, page, device }: { website: Website; pa
   );
 }
 
-function PreviewComponent({ component, accent }: { component: WebsiteComponent; accent: string }) {
+function PreviewComponent({ component, accent, offerings }: { component: WebsiteComponent; accent: string; offerings?: Offering[] }) {
+  if (component.type === "pricing" && offerings) {
+    component = {
+      ...component,
+      items: offerings.map((o) => ({
+        title: o.name,
+        description: o.description,
+        meta: o.pricingConcept,
+        url: o.stripePaymentLinkUrl,
+      })),
+    };
+  }
+
   switch (component.type) {
     case "hero":
       return (
@@ -79,6 +102,36 @@ function PreviewComponent({ component, accent }: { component: WebsiteComponent; 
               <div key={i}>
                 <p className="text-[12.5px] font-semibold text-ink">{it.title}</p>
                 <p className="mt-0.5 text-[11.5px] leading-relaxed text-ink-faint">{it.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    case "pricing":
+      return (
+        <div className="px-6 py-8">
+          {component.heading && <h3 className="mb-4 text-center text-[16px] font-semibold text-ink">{component.heading}</h3>}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {component.items?.map((it, i) => (
+              <div key={i} className="rounded-lg border border-line/70 p-3.5 text-center">
+                <p className="text-[12.5px] font-semibold text-ink">{it.title}</p>
+                {it.meta && <p className="mt-0.5 text-[13px] font-semibold" style={{ color: accent }}>{it.meta}</p>}
+                <p className="mt-1 text-[11.5px] leading-relaxed text-ink-faint">{it.description}</p>
+                {it.url ? (
+                  <a
+                    href={it.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2.5 inline-block rounded-full px-4 py-1.5 text-[11.5px] font-medium text-white"
+                    style={{ background: accent }}
+                  >
+                    Buy now
+                  </a>
+                ) : (
+                  <span className="mt-2.5 inline-block rounded-full border border-line px-4 py-1.5 text-[11.5px] font-medium text-ink-faint">
+                    Payment not connected
+                  </span>
+                )}
               </div>
             ))}
           </div>
