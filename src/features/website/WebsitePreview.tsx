@@ -1,4 +1,6 @@
 import type { Offering, Website, WebsiteComponent, WebsitePage } from "../../types";
+import { useWorkspaceStore } from "../../store/useWorkspaceStore";
+import { CompanyLogoMark } from "../../components/CompanyLogoMark";
 
 export type PreviewDevice = "desktop" | "tablet" | "mobile";
 
@@ -20,17 +22,21 @@ export function WebsitePreview({
   /** When provided, the "pricing" component renders live from these (title/price/Stripe link) instead of its stored snapshot, so a payment link connected after the site was generated shows up immediately. */
   offerings?: Offering[];
 }) {
+  const company = useWorkspaceStore((s) => s.company);
   return (
     <div className="flex justify-center overflow-x-auto bg-paper-dim p-4">
       <div
         className="min-h-[500px] overflow-hidden rounded-xl border border-line bg-white shadow-sm transition-all duration-300"
         style={{ width: DEVICE_WIDTH[device], maxWidth: "100%" }}
       >
-        <div className="flex items-center gap-4 border-b border-line/60 px-5 py-3">
-          <span className="text-[13px] font-semibold" style={{ color: website.theme.primaryColor }}>
-            {page.title === "Home" ? "Brand" : page.title}
-          </span>
-          <nav className="flex gap-3 text-[11.5px] text-ink-faint">
+        <div className="flex items-center gap-3 border-b border-line/60 px-5 py-3">
+          {company && (
+            <span className="flex items-center gap-2 text-[13px] font-semibold" style={{ color: website.theme.primaryColor }}>
+              <CompanyLogoMark name={company.name} colors={company.brand.colors} size={22} radius={6} />
+              {company.name}
+            </span>
+          )}
+          <nav className="ml-auto flex gap-3 text-[11.5px] text-ink-faint">
             {website.navigation.map((n) => (
               <span key={n.pageSlug}>{n.label}</span>
             ))}

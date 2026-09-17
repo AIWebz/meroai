@@ -58,7 +58,7 @@ export function LocalModelCard() {
     try {
       const provider = new LocalModelAIProvider();
       const res = await provider.chat("Reply with a short greeting to confirm you're working.", {
-        personaId: "ceo",
+        personaId: "assistant",
         facts: { companyName: "Mero" },
       });
       setTestResult("success");

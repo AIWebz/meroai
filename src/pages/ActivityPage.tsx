@@ -3,13 +3,13 @@ import {
   ListPlus,
   ShieldCheck,
   ShieldX,
-  UserPlus,
   Target,
   Globe,
   Building2,
   Lightbulb,
   XCircle,
   CreditCard,
+  Rocket,
 } from "lucide-react";
 import { SectionHeading, Card, DemoTag, EmptyState } from "../components/ui";
 import { useWorkspaceStore } from "../store/useWorkspaceStore";
@@ -23,32 +23,30 @@ const ICONS: Record<ActivityKind, React.ComponentType<{ className?: string }>> =
   approval_requested: ShieldCheck,
   approval_approved: ShieldCheck,
   approval_rejected: ShieldX,
-  employee_hired: UserPlus,
   goal_created: Target,
   goal_updated: Target,
   website_edited: Globe,
   company_created: Building2,
+  company_published: Rocket,
   opportunity_detected: Lightbulb,
   payment_connected: CreditCard,
 };
 
 export default function ActivityPage() {
   const activity = useWorkspaceStore((s) => s.activity);
-  const employees = useWorkspaceStore((s) => s.employees);
   const sorted = [...activity].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
   return (
     <div className="space-y-6">
-      <SectionHeading eyebrow="Activity" title="Activity feed" description="A timeline of everything your AI workforce and Mero have done." />
+      <SectionHeading eyebrow="Activity" title="Activity feed" description="A timeline of everything that's happened with your company." />
 
       {sorted.length === 0 ? (
-        <EmptyState title="No activity yet" description="Activity will appear here as your AI workforce starts working." />
+        <EmptyState title="No activity yet" description="Activity will appear here as things happen." />
       ) : (
         <Card className="p-2">
           <ul>
             {sorted.map((a, i) => {
               const Icon = ICONS[a.kind];
-              const employee = employees.find((e) => e.id === a.employeeId);
               return (
                 <li key={a.id} className={"flex gap-3 px-3 py-3.5" + (i !== sorted.length - 1 ? " border-b border-line" : "")}>
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-paper-dim text-ink-soft">
@@ -56,10 +54,9 @@ export default function ActivityPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-[13.5px] font-semibold text-ink">{employee?.name ?? "Mero"}</p>
+                      <p className="text-[13.5px] font-semibold text-ink">{a.title}</p>
                       {a.isDemo && <DemoTag />}
                     </div>
-                    <p className="mt-0.5 text-[13.5px] text-ink-soft">{a.title}</p>
                     {a.description && <p className="mt-0.5 text-[12.5px] leading-snug text-ink-faint">{a.description}</p>}
                   </div>
                   <span className="shrink-0 text-[12px] text-ink-faint">{timeAgo(a.createdAt)}</span>

@@ -1,73 +1,67 @@
 # Mero
 
-**Build a company. Let AI run it.**
+**Build a company. Let AI design it.**
 
-Mero is an AI operating system for a company you haven't built yet. Describe an
-idea in plain language and Mero generates a company blueprint — brand,
-offerings, goals, and a website — then assembles a recommended AI workforce to
-help operate it: an AI CEO that coordinates, employees for sales, marketing,
-support, research, analytics, development, and operations, a task and
-approval system, an opportunity engine, and a website builder with an AI
-command box.
+Mero is an AI that designs an entire company from a plain-language idea:
+name, brand, logo, offerings, goals, and a real site — then lets you publish
+that site straight to your own GitHub account. You choose up front whether
+you're building a **tool** (software people use) or a **shop** (products you
+sell), and everything Mero designs reflects that choice.
 
 Mero ships as a **fully static site**. There is no backend, no database, and
-no server that has to stay running. Everything — your company, its AI
-workforce, tasks, approvals, goals, and website — lives in your browser's
-`localStorage`. Refreshing the page restores your workspace exactly where you
-left it.
+no server that has to stay running. Everything — your company, its tasks,
+goals, and site — lives in your browser's `localStorage`. Refreshing the
+page restores your workspace exactly where you left it.
 
 Real AI is required before you can build a company: the first step of
 company creation is turning on a live AI provider, either a model that runs
 entirely in your browser (no key at all) or a small backend you deploy
-yourself. Once it's on, that same live AI writes your company's website copy
-— hero, about, features, FAQ, and CTA — grounded in the idea you actually
-typed, not a fill-in-the-blanks template. See
-[AI configuration](#ai-configuration).
+yourself. Once it's on, that same live AI designs your company's brand,
+offerings, goals, and site copy, grounded in the idea you actually typed —
+not a fill-in-the-blanks template. See [AI configuration](#ai-configuration).
 
 ## Features
 
-- **AI Company Generator** — turn on live AI, describe an idea, review an
-  editable blueprint (name, brand, offerings, goals, recommended workforce),
-  and watch Mero "build" the company, with your connected AI writing the
-  website copy live as part of that build.
-- **AI CEO** — a coordinating chat interface with a daily-briefing view
-  (what happened, what was completed, problems, opportunities, approvals
-  needed, recommended next actions).
-- **AI Workforce** — eight possible roles (CEO, Sales, Marketing, Support,
-  Research, Analyst, Developer, Operations), each with its own chat, goal,
-  permissions, and activity. Mero recommends who to hire; nothing is hired
-  automatically.
+- **AI Company Designer** — turn on live AI, describe an idea, choose tool
+  or shop, and watch Mero design the whole company: name, tagline,
+  description, brand personality/voice/colors, a procedurally-rendered logo,
+  offerings (products or plans), goals, and site copy — all in one step, all
+  editable before you commit to it.
+- **Mero, your AI assistant** — a single chat (⌘K anywhere, or the panel on
+  Overview) that helps with strategy, brand, and what to do next. Degrades
+  to a clearly labeled **Demo** reply if live AI is ever unreachable.
 - **Task system** — pending / working / awaiting approval / completed /
-  failed / cancelled, assignable to any hired employee.
-- **Approval Center** — actions with real consequence (publishing the
-  website, spending budget, bulk email, pricing changes) wait for your
-  explicit approval or rejection.
-- **Activity feed** — a timeline of everything Mero and your AI workforce
-  have done, clearly labeled as demo activity.
+  failed / cancelled. A plain to-do list for your company, not a simulated
+  workforce.
+- **Approval Center** — flag a task as needing your approval before it
+  proceeds; approve or reject it here.
+- **Activity feed** — a timeline of everything that's happened, clearly
+  labeled where it's demo activity.
 - **Goals** — create goals with a target and deadline; progress is only ever
   shown when it comes from connected data, never invented.
-- **Website Builder** — a generated multi-page website with a component
-  model (hero, features, pricing, FAQ, testimonials, CTA, contact...), a
-  desktop / tablet / mobile preview, and an AI command box ("Create an FAQ
-  section", "Change the hero headline", "Make the homepage more premium")
-  that edits the site directly.
+- **Your site** — a generated multi-page site (hero, about, features,
+  pricing, FAQ, contact) with a desktop / tablet / mobile preview, written
+  once by your connected AI when the company was created.
 - **Stripe payment links** — connect a Stripe
   [Payment Link](https://stripe.com/docs/payment-links) to any offering from
-  the Company page; the website's pricing section then renders a real "Buy
+  the Company page; the site's pricing section then renders a real "Buy
   now" button straight to Stripe-hosted checkout, live, with no backend or
   secret key on Mero's side.
+- **Publish to GitHub** — push the generated site as real static files to a
+  repository in your own GitHub account and turn on GitHub Pages, using a
+  personal access token you provide. No backend of ours involved.
 - **Opportunity Engine & Analytics** — honest empty states until you connect
   a real data source; nothing is fabricated.
 - **Knowledge base** — an editable company memory (description, brand voice,
-  products, customers, policies, goals, decisions).
+  offerings, customers, policies, goals, decisions).
 
-## Demo mode and real AI, honestly
+## Real AI, honestly
 
 Turning on live AI is **required** before you can build a company — it's
-the first step of the creation flow, and there's no way to skip it. This
-isn't optional the way it once was: your company's brand and website copy
-are written for real by whichever AI you connect, grounded in the idea you
-actually describe, so Mero needs a live provider before it can start.
+the first step of the creation flow, and there's no way to skip it. Your
+company's brand, offerings, goals, and site copy are designed for real by
+whichever AI you connect, grounded in the idea you describe and whether
+you're building a tool or a shop.
 
 Two ways to go live, both explained in that step: run a small open-weight
 model entirely in your browser via WebGPU (no key, ever), or deploy the
@@ -77,12 +71,11 @@ on-device; the backend route chats with the real
 [Claude API](https://claude.com/api) — see
 [AI configuration](#ai-configuration) below.
 
-Once a company exists, everywhere else in the app (AI CEO chat, employee
-chats, the website AI editor) still degrades gracefully to a labeled
-**Demo** response if the live provider is ever unreachable or misconfigured
-— that fallback still exists for ongoing chat, it just doesn't apply to the
-one-time website-copy generation during creation, which instead falls back
-to a clearly non-AI deterministic template (see
+Once a company exists, Mero's assistant chat still degrades gracefully to a
+labeled **Demo** response if the live provider is ever unreachable or
+misconfigured — that fallback exists for ongoing chat. It doesn't apply to
+the one-time company-design generation, which instead falls back to a
+clearly non-AI deterministic draft (see
 [What's real vs. simulated](#whats-real-vs-simulated)).
 
 Metrics that require real business data (revenue, customers, conversion,
@@ -154,6 +147,11 @@ repository root, or a `/<repo-name>/` subpath — including direct links to
 inner pages, which is normally the part that breaks on GitHub Pages with a
 plain `BrowserRouter`.
 
+This is the deployment for **Mero itself** (the app). The companies you
+build *with* Mero are published separately — see
+[Publishing your company to GitHub](#publishing-your-company-to-github)
+below.
+
 ## AI configuration
 
 **No AI API key is ever hardcoded in this repository or the built site.**
@@ -164,7 +162,7 @@ so it can run in any of these modes without any page or component caring
 which one is active:
 
 ```
-AIProvider  →  AIOrchestrator  →  AI CEO / AI Employees  →  Tasks
+AIProvider  →  AIOrchestrator  →  Mero's assistant chat / company designer
 ```
 
 - `src/ai/provider.ts` — the `AIProvider` interface every provider implements.
@@ -172,18 +170,18 @@ AIProvider  →  AIOrchestrator  →  AI CEO / AI Employees  →  Tasks
 - `src/ai/localModelProvider.ts` (+ `src/ai/localModel/engine.ts`) — runs a small open-weight model entirely in the browser via WebGPU. No key, ever.
 - `src/ai/backendProvider.ts` — calls a secure backend you deploy yourself.
 - `src/ai/resolveProvider.ts` — picks between them (in-browser model → backend → demo) and exposes `isAIEnabled()`, which gates the company creation flow.
-- `src/ai/orchestrator.ts` — routes chat through whichever provider is active; also builds the AI CEO briefing from local data (never a model call, so it's never fabricated).
-- `src/ai/generateWebsiteContent.ts` — asks the active live provider to write the new company's website copy as structured JSON, grounded in what you typed; used once, during creation.
+- `src/ai/orchestrator.ts` — routes chat through whichever provider is active; also builds the local briefing from workspace data (never a model call, so it's never fabricated).
+- `src/ai/generateCompanyWithAI.ts` — asks the active live provider to design the new company (brand, offerings, goals, site copy) as structured JSON, grounded in the idea and tool/shop choice; used once, right after the idea step.
 
 ### The AI gate: Step 1 of company creation
 
 Going to **Build My Company** now opens on **"Turn on Mero's AI"** before
-anything else. You can't describe your company or see a blueprint until one
-of the two options below is live — there's no "skip" or demo-only path here,
-because the website copy this step unlocks is written by that live AI, not
-a template. Once a provider is enabled it's remembered (in `localStorage`,
-just like the rest of your workspace), so returning users don't see this
-step again unless they disable AI in Settings.
+anything else. You can't describe your company or see a design until one of
+the two options below is live — there's no "skip" or demo-only path here,
+because the company design this step unlocks is written by that live AI,
+not a template. Once a provider is enabled it's remembered (in
+`localStorage`, just like the rest of your workspace), so returning users
+don't see this step again unless they disable AI in Settings.
 
 ### Option 1: Run a real model in the browser (no key, ever)
 
@@ -199,9 +197,11 @@ scripted templates.
 Honest tradeoffs: the download happens once and is cached by the browser
 afterward, but it is a real ~900MB the first time. Inference is slower than
 a hosted API and needs a fairly modern browser/GPU (Mero detects WebGPU
-support and shows a clear message, with an automatic fallback to Demo mode,
-if it isn't available). Response quality is noticeably below Claude — this
-is a genuinely small model, not a scaled-down version of a frontier one.
+support and shows a clear message if it isn't available). Response quality
+is noticeably below Claude — this is a genuinely small model, not a
+scaled-down version of a frontier one; the deterministic fallback (see
+below) exists precisely because a small model won't always follow the JSON
+format reliably.
 
 ### Option 2: Deploy a secure backend (better for a shared deployment)
 
@@ -231,20 +231,30 @@ deployment itself never changes. Any backend that implements the same small
 JSON contract works — the bundled Worker is a reference implementation, not
 the only option.
 
-### How the AI writes your website
+### How the AI designs your company
 
-During creation, once a live provider is on, Mero asks it for the site's
-hero headline/subheadline, about section, three features, three FAQ items,
-and CTA copy as structured JSON — grounded in the exact idea text you typed
-plus the blueprint's industry, audience, and brand voice
-(`src/ai/generateWebsiteContent.ts`). If the provider errors, times out, or
-returns something that doesn't parse into valid content — which can happen
-with the smaller in-browser model in particular — Mero falls back per-field
-to the same deterministic template it always used
-(`src/data/websiteGenerator.ts`), so company creation never fails or
-produces a broken/empty site. When AI content is used, the activity feed
-records it plainly ("AI wrote the initial website copy"); when the fallback
-is used, it isn't claimed as AI-written anywhere.
+Right after the idea + tool/shop step, Mero asks the live provider to
+design the entire company as one structured JSON object — name, tagline,
+description, industry, target audience, business model, brand personality,
+voice, a 3-color palette, offerings (2-3 products for a shop, 2 pricing
+tiers for a tool), goals, and site copy (hero, about, three features, three
+FAQ items, CTA) — grounded in the exact idea text and the tool/shop choice
+(`src/ai/generateCompanyWithAI.ts`). A deterministic draft is generated
+instantly as a base; whatever the AI successfully returns is layered on top
+of it field-by-field (`applyAIContent` in `src/data/companyGenerator.ts`)
+before the review step ever renders — so what you review and edit is what
+you get, not silently overwritten afterward. If the AI call fails, times
+out, or returns something that doesn't parse — which can happen with the
+smaller in-browser model in particular — the deterministic draft is what
+you see instead, so company creation never fails or produces a broken/empty
+company.
+
+The logo is a real, code-rendered SVG lettermark (`src/utils/logo.ts`,
+`src/components/CompanyLogoMark.tsx`) built from the company's initials and
+its AI-chosen palette — not a text description, since a text model can't
+generate a raster/vector image. The AI's contribution is the name and
+colors; code renders the actual mark, both in the app and in the published
+site.
 
 ### Stripe payment links
 
@@ -254,34 +264,57 @@ link"** action. Create a product and a
 Dashboard, then paste the resulting `https://buy.stripe.com/...` URL in.
 Mero validates it's a plausible `stripe.com` HTTPS link and stores it on
 that offering (`setOfferingPaymentLink` in
-`src/store/useWorkspaceStore.ts`). The website's pricing section then
-renders a live "Buy now" link straight to that Stripe-hosted checkout page
-for any connected offering, and a plain "Payment not connected" label for
-any that aren't — no backend, secret key, or webhook required on Mero's
-side, since Stripe hosts and handles the actual checkout.
+`src/store/useWorkspaceStore.ts`). The site's pricing section then renders
+a live "Buy now" link straight to that Stripe-hosted checkout page for any
+connected offering, and a plain "Payment not connected" label for any that
+aren't — no backend, secret key, or webhook required on Mero's side, since
+Stripe hosts and handles the actual checkout. This applies to the live
+in-app preview and to what gets published to GitHub.
+
+## Publishing your company to GitHub
+
+The **Site** page renders the generated site and lets you publish it for
+real. Paste a GitHub
+[personal access token](https://github.com/settings/tokens/new?scopes=repo&description=Mero)
+with `repo` scope and pick a repository name; Mero calls the GitHub REST API
+directly from your browser (`src/site/publishToGithub.ts`) to create (or
+reuse) that repository under your own account, push the site as real static
+HTML/CSS files (`src/site/renderStaticSite.ts` — plain markup, no build
+step, no framework required to view it), and turn on GitHub Pages for it.
+
+The token is stored only in this browser's `localStorage`
+(`src/store/useGithubStore.ts`) and sent only to `api.github.com` — never to
+any server of ours, never committed anywhere. There is no OAuth flow and no
+backend of ours in this path; it's the same "bring your own credential"
+pattern as the Stripe payment links and the AI backend URL. GitHub Pages
+can take a minute to go live after the first publish. Re-publishing updates
+the same repository's files in place.
 
 ## Data & persistence
 
-All workspace data (company, workforce, tasks, approvals, goals, knowledge,
-website, settings) is stored in the browser via `localStorage`
+All workspace data (company, tasks, approvals, goals, knowledge, site,
+settings) is stored in the browser via `localStorage`
 (`src/store/useWorkspaceStore.ts`, a Zustand store with the `persist`
-middleware). Nothing is sent to a server. The data model
-(`src/types/index.ts`) is written to be storage-agnostic, so the same shapes
-can later be persisted through a real backend/API instead.
+middleware). Nothing is sent to a server except the two explicit,
+user-initiated integrations above (your chosen AI provider, and GitHub when
+you publish). The data model (`src/types/index.ts`) is written to be
+storage-agnostic, so the same shapes can later be persisted through a real
+backend/API instead.
 
 ## Project structure
 
 ```
 mero/
 ├── src/                     # The static frontend — this is what GitHub Pages deploys
-│   ├── ai/                  # AIProvider, DemoAIProvider, LocalModelAIProvider, BackendAIProvider, orchestrator, personas, generateWebsiteContent
-│   ├── components/          # Shared UI primitives (Button, Card, Sidebar, ChatThread, ...)
-│   ├── data/                # Deterministic company/website/workforce generators + catalogs
-│   ├── features/            # Feature-scoped UI (company, workforce, tasks, goals, website, ai, EnableAIStep, OfferingPaymentLink)
+│   ├── ai/                  # AIProvider, DemoAIProvider, LocalModelAIProvider, BackendAIProvider, orchestrator, personas, generateCompanyWithAI
+│   ├── components/          # Shared UI primitives (Button, Card, Sidebar, ChatThread, CompanyLogoMark, ...)
+│   ├── data/                # Deterministic company/website/task generators
+│   ├── features/            # Feature-scoped UI (company creation steps, ai, site publish)
 │   ├── pages/                # Route-level pages
-│   ├── store/                # Zustand stores (workspace data, UI state, AI backend config)
+│   ├── site/                  # Static site rendering + GitHub publish client
+│   ├── store/                # Zustand stores (workspace data, UI state, AI config, GitHub config)
 │   ├── types/                 # Shared TypeScript data models
-│   ├── utils/                  # Small formatting/id helpers
+│   ├── utils/                  # Logo generation + small formatting/id helpers
 │   ├── App.tsx                  # Route table
 │   └── main.tsx                  # Entry point (HashRouter)
 ├── public/                  # Static assets (favicon, ...)
@@ -294,26 +327,24 @@ mero/
 
 ## What's real vs. simulated
 
-- **Real**: task/approval/goal state, workforce hiring, website editing,
-  knowledge base, Stripe payment link storage and live checkout links, all
-  local persistence, all navigation.
-- **Website copy at creation time**: genuinely written by your connected
-  live AI (in-browser model or backend), grounded in the idea you typed —
-  not labeled Demo, since live AI is required before creation can start. If
-  that generation call fails, Mero falls back to a deterministic template
-  per-field rather than leaving the site broken; the activity feed only
-  credits the AI when its content was actually used.
-- **Ongoing AI chat responses** (AI CEO, employees, website AI editor):
-  genuinely real once a provider is live; degrades to a labeled **Demo**
-  response if the live provider becomes unreachable after the company
-  already exists.
-- **Always simulated regardless of AI mode**: the company blueprint's
-  structured fields (name, brand palette, goals) from the generator, the AI
-  CEO briefing content (a template summary of your real local data, not a
-  model call), the website AI editor's rule-based command parsing, and
-  seeded example activity/tasks/opportunities created when a company is
+- **Real**: task/approval/goal state, the procedural logo, Stripe payment
+  link storage and live checkout links, the published GitHub repository and
+  Pages site once you publish, all local persistence, all navigation.
+- **Company design at creation time** (brand, offerings, goals, site copy):
+  genuinely designed by your connected live AI (in-browser model or
+  backend), grounded in the idea and tool/shop choice you gave — not
+  labeled Demo, since live AI is required before creation can start. If
+  that generation call fails, Mero falls back to a deterministic draft
+  per-field rather than leaving the company broken.
+- **Ongoing AI chat** (Mero's assistant): genuinely real once a provider is
+  live; degrades to a labeled **Demo** response if the live provider
+  becomes unreachable after the company already exists.
+- **Always simulated regardless of AI mode**: the deterministic draft's
+  structured fields when AI generation fails or is partially incomplete,
+  the local briefing panel (a template summary of your real local data, not
+  a model call), and a seeded starter task or two created when a company is
   first built.
 - **Honest empty states, never fabricated**: revenue, customers, leads,
-  conversion, website visitors, analytics, and opportunity detection all
+  conversion, site visitors, analytics, and opportunity detection all
   require a connected data source and will say so instead of inventing a
   number.

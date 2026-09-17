@@ -2,29 +2,9 @@ import { useEffect, useState } from "react";
 import { Check } from "lucide-react";
 import { Logo } from "../../components/Logo";
 
-const STEPS = [
-  "Understanding your idea",
-  "Defining your market",
-  "Creating your brand",
-  "Designing your website",
-  "Planning operations",
-  "Building your AI workforce",
-  "Creating company goals",
-  "Preparing your company",
-];
+const STEPS = ["Setting up your workspace", "Preparing your site files", "Creating starter tasks and goals", "Finishing up"];
 
-// "Designing your website" is the step where a real, live AI call happens
-// (see useWorkspaceStore.createCompany) — every other step here is local
-// bookkeeping, shown on a timer for pacing/feel.
-const AI_STEP_INDEX = STEPS.indexOf("Designing your website");
-
-export function CreationAnimationStep({
-  websiteReady,
-  onComplete,
-}: {
-  websiteReady: Promise<void> | null;
-  onComplete: () => void;
-}) {
+export function CreationAnimationStep({ onComplete }: { onComplete: () => void }) {
   const [doneCount, setDoneCount] = useState(0);
 
   useEffect(() => {
@@ -32,23 +12,9 @@ export function CreationAnimationStep({
       const t = setTimeout(onComplete, 500);
       return () => clearTimeout(t);
     }
-
-    if (doneCount === AI_STEP_INDEX && websiteReady) {
-      let cancelled = false;
-      const minDisplayTime = new Promise<void>((resolve) => setTimeout(resolve, 700));
-      Promise.all([websiteReady, minDisplayTime]).then(() => {
-        if (!cancelled) setDoneCount((c) => c + 1);
-      });
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    const t = setTimeout(() => setDoneCount((c) => c + 1), 420);
+    const t = setTimeout(() => setDoneCount((c) => c + 1), 380);
     return () => clearTimeout(t);
-  }, [doneCount, onComplete, websiteReady]);
-
-  const waitingOnAI = doneCount === AI_STEP_INDEX && Boolean(websiteReady);
+  }, [doneCount, onComplete]);
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-paper px-6">
@@ -70,20 +36,11 @@ export function CreationAnimationStep({
                   {complete && <Check className="h-3 w-3" strokeWidth={3} />}
                   {active && !complete && <span className="h-1.5 w-1.5 animate-pulse-soft rounded-full bg-ink-faint" />}
                 </span>
-                <span className={"text-[14px] transition-colors duration-300 " + (complete || active ? "text-ink" : "text-ink-faint/60")}>
-                  {step}
-                  {active && i === AI_STEP_INDEX && waitingOnAI && (
-                    <span className="ml-1.5 text-[12px] text-ink-faint">— writing with your AI…</span>
-                  )}
-                </span>
+                <span className={"text-[14px] transition-colors duration-300 " + (complete || active ? "text-ink" : "text-ink-faint/60")}>{step}</span>
               </li>
             );
           })}
         </ul>
-        <p className="mt-8 text-center text-[12px] text-ink-faint/70">
-          Your website copy is written live by your connected AI — everything else here is prepared locally in your
-          browser.
-        </p>
       </div>
     </div>
   );

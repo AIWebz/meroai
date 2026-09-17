@@ -35,7 +35,7 @@ export default function GoalsPage() {
       />
 
       {goals.length === 0 ? (
-        <EmptyState title="No goals yet" description="Add a goal to give your AI workforce something concrete to work toward." action={<Button className="mt-2" onClick={() => setModalOpen(true)}>Create a goal</Button>} />
+        <EmptyState title="No goals yet" description="Add a goal to give your company something concrete to work toward." action={<Button className="mt-2" onClick={() => setModalOpen(true)}>Create a goal</Button>} />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {goals.map((g) => {

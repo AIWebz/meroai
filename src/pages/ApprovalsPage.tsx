@@ -20,7 +20,7 @@ export default function ApprovalsPage() {
       />
 
       {pending.length === 0 ? (
-        <EmptyState title="Nothing waiting on you" description="When your AI workforce needs approval for something important, it will show up here." />
+        <EmptyState title="Nothing waiting on you" description="Tasks you flag as needing approval will show up here." />
       ) : (
         <div className="space-y-3">
           {pending.map((a) => (
@@ -50,7 +50,6 @@ export default function ApprovalsPage() {
 }
 
 function ApprovalCard({ approval }: { approval: Approval }) {
-  const employee = useWorkspaceStore((s) => s.employees.find((e) => e.id === approval.employeeId));
   const approveApproval = useWorkspaceStore((s) => s.approveApproval);
   const rejectApproval = useWorkspaceStore((s) => s.rejectApproval);
   const [expanded, setExpanded] = useState(false);
@@ -59,8 +58,7 @@ function ApprovalCard({ approval }: { approval: Approval }) {
     <Card className="p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-moss-600">{employee?.name.replace("AI ", "") ?? "Mero"}</p>
-          <p className="mt-1 text-[15px] font-semibold text-ink">{approval.title}</p>
+          <p className="text-[15px] font-semibold text-ink">{approval.title}</p>
         </div>
         <Badge tone="amber">Pending</Badge>
       </div>

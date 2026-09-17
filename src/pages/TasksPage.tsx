@@ -11,8 +11,6 @@ const FILTERS: (TaskStatus | "all")[] = ["all", "pending", "working", "awaiting_
 
 export default function TasksPage() {
   const tasks = useWorkspaceStore((s) => s.tasks);
-  const allEmployees = useWorkspaceStore((s) => s.employees);
-  const employees = allEmployees.filter((e) => e.isHired);
   const [filter, setFilter] = useState<TaskStatus | "all">("all");
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -24,9 +22,9 @@ export default function TasksPage() {
       <SectionHeading
         eyebrow="Task System"
         title="Tasks"
-        description="Everything your AI workforce is doing, has done, or is waiting to do."
+        description="Track what's next for your company."
         action={
-          <Button onClick={() => setModalOpen(true)} disabled={employees.length === 0}>
+          <Button onClick={() => setModalOpen(true)}>
             <Plus className="h-4 w-4" /> New task
           </Button>
         }
@@ -51,8 +49,8 @@ export default function TasksPage() {
       {sorted.length === 0 ? (
         <EmptyState
           title="No tasks yet"
-          description={employees.length === 0 ? "Hire an AI employee first, then assign them their first task." : "Create a task to get your AI workforce moving."}
-          action={employees.length > 0 ? <Button className="mt-2" onClick={() => setModalOpen(true)}>Create a task</Button> : undefined}
+          description="Create a task to start tracking what's next."
+          action={<Button className="mt-2" onClick={() => setModalOpen(true)}>Create a task</Button>}
         />
       ) : (
         <div className="space-y-3">

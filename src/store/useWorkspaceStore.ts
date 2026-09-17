@@ -7,8 +7,6 @@ import type {
   ChatMessage,
   Company,
   CompanySettings,
-  Employee,
-  EmployeeRoleKey,
   Goal,
   KnowledgeDocument,
   Opportunity,
@@ -16,29 +14,16 @@ import type {
   TaskPriority,
   User,
   Website,
-  WebsiteComponent,
 } from "../types";
 import { id, now } from "../utils/id";
-import { generateBlueprint, type CompanyBlueprint } from "../data/companyGenerator";
+import type { CompanyBlueprint } from "../data/companyGenerator";
 import { generateWebsite } from "../data/websiteGenerator";
-import { generateWebsiteContentWithAI } from "../ai/generateWebsiteContent";
-import { resolveAIProvider } from "../ai/resolveProvider";
-import {
-  seedActivity,
-  seedApprovals,
-  seedEmployees,
-  seedGoals,
-  seedKnowledge,
-  seedOpportunities,
-  seedTasks,
-} from "../data/seedGenerator";
-import { catalogFor } from "../data/employeeCatalog";
+import { seedActivity, seedGoals, seedKnowledge, seedOpportunities, seedTasks } from "../data/seedGenerator";
 
 const APPROVAL_KIND_LABEL: Record<ApprovalKind, string> = {
   publish_campaign: "Publish campaign",
   send_campaign: "Send campaign",
   change_pricing: "Change pricing",
-  publish_website: "Publish website",
   send_bulk_email: "Send bulk email",
   spend_budget: "Spend advertising budget",
   delete_content: "Delete content",
@@ -49,7 +34,6 @@ interface WorkspaceState {
   user: User;
   company: Company | null;
   settings: CompanySettings | null;
-  employees: Employee[];
   tasks: Task[];
   approvals: Approval[];
   activity: Activity[];
@@ -60,20 +44,16 @@ interface WorkspaceState {
   chatMessages: ChatMessage[];
 
   // company lifecycle
-  createCompany: (blueprint: CompanyBlueprint, originalIdea: string, hiredKeys: EmployeeRoleKey[]) => Promise<void>;
+  createCompany: (blueprint: CompanyBlueprint, originalIdea: string) => void;
   resetWorkspace: () => void;
   updateCompany: (patch: Partial<Company>) => void;
   updateSettings: (patch: Partial<CompanySettings>) => void;
   setOfferingPaymentLink: (offeringId: string, url: string | null) => void;
+  markPublished: (info: { repoUrl: string; pagesUrl: string }) => void;
   updateUser: (patch: Partial<User>) => void;
 
-  // workforce
-  hireEmployee: (roleKey: EmployeeRoleKey) => void;
-  pauseEmployee: (employeeId: string) => void;
-  activateEmployee: (employeeId: string) => void;
-
   // tasks
-  createTask: (input: { title: string; description: string; employeeId: string; priority?: TaskPriority; requiresApproval?: boolean; approvalKind?: ApprovalKind; approvalReason?: string }) => Task;
+  createTask: (input: { title: string; description: string; priority?: TaskPriority; requiresApproval?: boolean; approvalKind?: ApprovalKind; approvalReason?: string }) => Task;
   startTask: (taskId: string) => void;
   completeTask: (taskId: string, result: string) => void;
   failTask: (taskId: string, reason: string) => void;
@@ -99,8 +79,6 @@ interface WorkspaceState {
 
   // website
   updateWebsite: (patch: Partial<Website>) => void;
-  updateWebsiteComponent: (pageId: string, componentId: string, patch: Partial<WebsiteComponent>) => void;
-  publishWebsite: () => void;
 
   // chat
   addChatMessage: (message: Omit<ChatMessage, "id" | "createdAt">) => void;
@@ -112,7 +90,6 @@ export const useWorkspaceStore = create<WorkspaceState>()(
       user: { id: "user_local", name: "You", email: "you@example.com", role: "owner", createdAt: now() },
       company: null,
       settings: null,
-      employees: [],
       tasks: [],
       approvals: [],
       activity: [],
@@ -122,7 +99,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
       website: null,
       chatMessages: [],
 
-      createCompany: async (blueprint, originalIdea, hiredKeys) => {
+      createCompany: (blueprint, originalIdea) => {
         const companyId = id("company");
         const company: Company = {
           id: companyId,
@@ -131,6 +108,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
           description: blueprint.description,
           industry: blueprint.industry,
           businessModel: blueprint.businessModel,
+          productType: blueprint.productType,
           targetAudience: blueprint.targetAudience,
           originalIdea,
           brand: blueprint.brand,
@@ -138,6 +116,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
           goalSummary: blueprint.goalSummary,
           createdAt: now(),
           isDemo: true,
+          github: null,
         };
         const settings: CompanySettings = {
           companyId,
@@ -148,44 +127,23 @@ export const useWorkspaceStore = create<WorkspaceState>()(
           notifyOnTaskFailed: true,
           notifyOnDailyBriefing: true,
         };
-        const employees = seedEmployees(companyId, hiredKeys);
-        const tasks = seedTasks(companyId, employees);
+        const tasks = seedTasks(companyId, blueprint);
         const goals = seedGoals(companyId, blueprint);
-        const activity = seedActivity(companyId, company.name, employees, tasks);
+        const activity = seedActivity(companyId, company.name, tasks);
         const opportunities = seedOpportunities(companyId);
         const knowledge = seedKnowledge(companyId, blueprint);
-        const approvals = seedApprovals(companyId, employees);
-
-        // The AI CEO/workforce write the website copy for real, grounded in
-        // what the founder actually described — not a template. If the live
-        // provider errors or returns something unusable, fall back to the
-        // deterministic template rather than leaving the site broken.
-        const aiContent = await generateWebsiteContentWithAI(resolveAIProvider(), originalIdea, blueprint).catch(() => null);
-        const website = generateWebsite(companyId, blueprint, aiContent);
-        if (aiContent) {
-          activity.unshift({
-            id: id("act"),
-            companyId,
-            employeeId: employees.find((e) => e.roleKey === "developer")?.id ?? null,
-            kind: "website_edited",
-            title: "AI wrote the initial website copy",
-            description: "Hero, about, features, FAQ, and CTA copy generated live from your company description.",
-            createdAt: now(),
-            isDemo: false,
-          });
-        }
+        const website = generateWebsite(companyId, blueprint);
 
         set({
           company,
           settings,
-          employees,
           tasks,
           goals,
           activity,
           opportunities,
           knowledge,
           website,
-          approvals,
+          approvals: [],
           chatMessages: [],
         });
       },
@@ -194,7 +152,6 @@ export const useWorkspaceStore = create<WorkspaceState>()(
         set({
           company: null,
           settings: null,
-          employees: [],
           tasks: [],
           approvals: [],
           activity: [],
@@ -223,7 +180,6 @@ export const useWorkspaceStore = create<WorkspaceState>()(
         const offering = company?.offerings.find((o) => o.id === offeringId);
         if (company && offering) {
           get().logActivity({
-            employeeId: null,
             kind: "payment_connected",
             title: url ? `Connected Stripe payment link for ${offering.name}` : `Removed Stripe payment link for ${offering.name}`,
             description: url ?? "No payment link connected.",
@@ -231,32 +187,17 @@ export const useWorkspaceStore = create<WorkspaceState>()(
           });
         }
       },
-      updateUser: (patch) => set((s) => ({ user: { ...s.user, ...patch } })),
-
-      hireEmployee: (roleKey) => {
-        const company = get().company;
-        if (!company) return;
-        set((s) => ({
-          employees: s.employees.map((e) =>
-            e.roleKey === roleKey ? { ...e, isHired: true, status: "active", hiredAt: now() } : e
-          ),
-        }));
-        const emp = get().employees.find((e) => e.roleKey === roleKey);
-        if (emp) {
-          get().logActivity({
-            employeeId: emp.id,
-            kind: "employee_hired",
-            title: `${emp.name} joined the company`,
-            description: catalogFor(roleKey).description,
-            isDemo: true,
-          });
-        }
+      markPublished: ({ repoUrl, pagesUrl }) => {
+        set((s) => (s.company ? { company: { ...s.company, github: { repoUrl, pagesUrl, publishedAt: now() } } } : s));
+        set((s) => (s.website ? { website: { ...s.website, isPublished: true, lastEditedAt: now() } } : s));
+        get().logActivity({
+          kind: "company_published",
+          title: "Published to GitHub",
+          description: `Live at ${pagesUrl}`,
+          isDemo: false,
+        });
       },
-
-      pauseEmployee: (employeeId) =>
-        set((s) => ({ employees: s.employees.map((e) => (e.id === employeeId ? { ...e, status: "paused" } : e)) })),
-      activateEmployee: (employeeId) =>
-        set((s) => ({ employees: s.employees.map((e) => (e.id === employeeId ? { ...e, status: "active" } : e)) })),
+      updateUser: (patch) => set((s) => ({ user: { ...s.user, ...patch } })),
 
       createTask: (input) => {
         const company = get().company;
@@ -266,7 +207,6 @@ export const useWorkspaceStore = create<WorkspaceState>()(
           companyId: company.id,
           title: input.title,
           description: input.description,
-          employeeId: input.employeeId,
           status: "pending",
           priority: input.priority ?? "medium",
           createdAt: now(),
@@ -274,7 +214,6 @@ export const useWorkspaceStore = create<WorkspaceState>()(
           result: null,
           requiresApproval: !!input.requiresApproval,
           approvalId: null,
-          runs: [],
         };
 
         let approval: Approval | null = null;
@@ -283,10 +222,9 @@ export const useWorkspaceStore = create<WorkspaceState>()(
             id: id("appr"),
             companyId: company.id,
             taskId: task.id,
-            employeeId: input.employeeId,
             kind: input.approvalKind ?? "other",
             title: APPROVAL_KIND_LABEL[input.approvalKind ?? "other"],
-            reason: input.approvalReason ?? "This action needs your approval before it goes live.",
+            reason: input.approvalReason ?? "This action needs your approval before it proceeds.",
             details: input.description,
             status: "pending",
             createdAt: now(),
@@ -301,66 +239,28 @@ export const useWorkspaceStore = create<WorkspaceState>()(
           approvals: approval ? [approval, ...s.approvals] : s.approvals,
         }));
 
-        get().logActivity({
-          employeeId: input.employeeId,
-          kind: "task_created",
-          title: `Created task: ${task.title}`,
-          description: task.description,
-          isDemo: true,
-        });
+        get().logActivity({ kind: "task_created", title: `Created task: ${task.title}`, description: task.description, isDemo: true });
         if (approval) {
-          get().logActivity({
-            employeeId: input.employeeId,
-            kind: "approval_requested",
-            title: `Requested approval: ${approval.title}`,
-            description: approval.reason,
-            isDemo: true,
-          });
+          get().logActivity({ kind: "approval_requested", title: `Requested approval: ${approval.title}`, description: approval.reason, isDemo: true });
         }
         return task;
       },
 
       startTask: (taskId) =>
-        set((s) => ({
-          tasks: s.tasks.map((t) => (t.id === taskId ? { ...t, status: "working", updatedAt: now() } : t)),
-          employees: s.employees.map((e) => {
-            const task = s.tasks.find((t) => t.id === taskId);
-            return task && e.id === task.employeeId ? { ...e, status: "working", currentTask: task.title } : e;
-          }),
-        })),
+        set((s) => ({ tasks: s.tasks.map((t) => (t.id === taskId ? { ...t, status: "working", updatedAt: now() } : t)) })),
 
       completeTask: (taskId, result) => {
         const task = get().tasks.find((t) => t.id === taskId);
         if (!task) return;
-        set((s) => ({
-          tasks: s.tasks.map((t) => (t.id === taskId ? { ...t, status: "completed", result, updatedAt: now() } : t)),
-          employees: s.employees.map((e) =>
-            e.id === task.employeeId ? { ...e, status: "active", currentTask: null, tasksCompleted: e.tasksCompleted + 1 } : e
-          ),
-        }));
-        get().logActivity({
-          employeeId: task.employeeId,
-          kind: "task_completed",
-          title: `Completed: ${task.title}`,
-          description: result,
-          isDemo: true,
-        });
+        set((s) => ({ tasks: s.tasks.map((t) => (t.id === taskId ? { ...t, status: "completed", result, updatedAt: now() } : t)) }));
+        get().logActivity({ kind: "task_completed", title: `Completed: ${task.title}`, description: result, isDemo: true });
       },
 
       failTask: (taskId, reason) => {
         const task = get().tasks.find((t) => t.id === taskId);
         if (!task) return;
-        set((s) => ({
-          tasks: s.tasks.map((t) => (t.id === taskId ? { ...t, status: "failed", result: reason, updatedAt: now() } : t)),
-          employees: s.employees.map((e) => (e.id === task.employeeId ? { ...e, status: "active", currentTask: null } : e)),
-        }));
-        get().logActivity({
-          employeeId: task.employeeId,
-          kind: "task_failed",
-          title: `Failed: ${task.title}`,
-          description: reason,
-          isDemo: true,
-        });
+        set((s) => ({ tasks: s.tasks.map((t) => (t.id === taskId ? { ...t, status: "failed", result: reason, updatedAt: now() } : t)) }));
+        get().logActivity({ kind: "task_failed", title: `Failed: ${task.title}`, description: reason, isDemo: true });
       },
 
       cancelTask: (taskId) =>
@@ -369,38 +269,17 @@ export const useWorkspaceStore = create<WorkspaceState>()(
       approveApproval: (approvalId) => {
         const approval = get().approvals.find((a) => a.id === approvalId);
         if (!approval) return;
-        set((s) => ({
-          approvals: s.approvals.map((a) => (a.id === approvalId ? { ...a, status: "approved", resolvedAt: now() } : a)),
-        }));
-        if (approval.taskId) {
-          get().completeTask(approval.taskId, `Approved and completed: ${approval.title}.`);
-        }
-        if (approval.kind === "publish_website") {
-          get().publishWebsite();
-        }
-        get().logActivity({
-          employeeId: approval.employeeId,
-          kind: "approval_approved",
-          title: `Approved: ${approval.title}`,
-          description: approval.reason,
-          isDemo: true,
-        });
+        set((s) => ({ approvals: s.approvals.map((a) => (a.id === approvalId ? { ...a, status: "approved", resolvedAt: now() } : a)) }));
+        if (approval.taskId) get().completeTask(approval.taskId, `Approved and completed: ${approval.title}.`);
+        get().logActivity({ kind: "approval_approved", title: `Approved: ${approval.title}`, description: approval.reason, isDemo: true });
       },
 
       rejectApproval: (approvalId) => {
         const approval = get().approvals.find((a) => a.id === approvalId);
         if (!approval) return;
-        set((s) => ({
-          approvals: s.approvals.map((a) => (a.id === approvalId ? { ...a, status: "rejected", resolvedAt: now() } : a)),
-        }));
+        set((s) => ({ approvals: s.approvals.map((a) => (a.id === approvalId ? { ...a, status: "rejected", resolvedAt: now() } : a)) }));
         if (approval.taskId) get().cancelTask(approval.taskId);
-        get().logActivity({
-          employeeId: approval.employeeId,
-          kind: "approval_rejected",
-          title: `Rejected: ${approval.title}`,
-          description: approval.reason,
-          isDemo: true,
-        });
+        get().logActivity({ kind: "approval_rejected", title: `Rejected: ${approval.title}`, description: approval.reason, isDemo: true });
       },
 
       logActivity: (input) => {
@@ -426,7 +305,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
           createdAt: now(),
         };
         set((s) => ({ goals: [goal, ...s.goals] }));
-        get().logActivity({ employeeId: null, kind: "goal_created", title: `New goal: ${goal.title}`, description: goal.targetValue, isDemo: true });
+        get().logActivity({ kind: "goal_created", title: `New goal: ${goal.title}`, description: goal.targetValue, isDemo: true });
       },
       updateGoal: (goalId, patch) => set((s) => ({ goals: s.goals.map((g) => (g.id === goalId ? { ...g, ...patch } : g)) })),
       removeGoal: (goalId) => set((s) => ({ goals: s.goals.filter((g) => g.id !== goalId) })),
@@ -437,37 +316,13 @@ export const useWorkspaceStore = create<WorkspaceState>()(
       updateKnowledge: (docId, content) =>
         set((s) => ({ knowledge: s.knowledge.map((k) => (k.id === docId ? { ...k, content, updatedAt: now() } : k)) })),
 
-      updateWebsite: (patch) =>
-        set((s) => (s.website ? { website: { ...s.website, ...patch, lastEditedAt: now() } } : s)),
-      updateWebsiteComponent: (pageId, componentId, patch) =>
-        set((s) => {
-          if (!s.website) return s;
-          return {
-            website: {
-              ...s.website,
-              lastEditedAt: now(),
-              pages: s.website.pages.map((p) =>
-                p.id !== pageId
-                  ? p
-                  : { ...p, components: p.components.map((c) => (c.id === componentId ? { ...c, ...patch } : c)) }
-              ),
-            },
-          };
-        }),
-      publishWebsite: () => {
-        set((s) => (s.website ? { website: { ...s.website, isPublished: true, lastEditedAt: now() } } : s));
-        get().logActivity({ employeeId: null, kind: "website_edited", title: "Website published", description: "The company website was published.", isDemo: true });
-      },
+      updateWebsite: (patch) => set((s) => (s.website ? { website: { ...s.website, ...patch, lastEditedAt: now() } } : s)),
 
       addChatMessage: (message) => set((s) => ({ chatMessages: [...s.chatMessages, { id: id("msg"), createdAt: now(), ...message }] })),
     }),
     {
       name: "mero-workspace",
-      version: 1,
+      version: 2,
     }
   )
 );
-
-export function buildBlueprintFromIdea(idea: string): CompanyBlueprint {
-  return generateBlueprint(idea);
-}

@@ -3,7 +3,6 @@ import clsx from "clsx";
 import {
   LayoutGrid,
   Building2,
-  Users,
   ListChecks,
   CheckSquare,
   Activity as ActivityIcon,
@@ -20,11 +19,10 @@ import { useWorkspaceStore } from "../store/useWorkspaceStore";
 const NAV_ITEMS = [
   { to: "/app", label: "Overview", icon: LayoutGrid, end: true },
   { to: "/app/company", label: "Company", icon: Building2 },
-  { to: "/app/workforce", label: "Workforce", icon: Users },
   { to: "/app/tasks", label: "Tasks", icon: ListChecks },
   { to: "/app/approvals", label: "Approvals", icon: CheckSquare, badgeKey: "approvals" as const },
   { to: "/app/activity", label: "Activity", icon: ActivityIcon },
-  { to: "/app/website", label: "Website", icon: Globe },
+  { to: "/app/site", label: "Site", icon: Globe },
   { to: "/app/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/app/knowledge", label: "Knowledge", icon: BookOpen },
 ];

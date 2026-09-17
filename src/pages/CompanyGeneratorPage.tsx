@@ -2,19 +2,21 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { EnableAIStep } from "../features/company/EnableAIStep";
 import { IdeaStep } from "../features/company/IdeaStep";
+import { DesigningCompanyStep } from "../features/company/DesigningCompanyStep";
 import { BlueprintReviewStep } from "../features/company/BlueprintReviewStep";
 import { CreationAnimationStep } from "../features/company/CreationAnimationStep";
-import { buildBlueprintFromIdea, useWorkspaceStore } from "../store/useWorkspaceStore";
+import { useWorkspaceStore } from "../store/useWorkspaceStore";
 import { isAIEnabled } from "../ai/resolveProvider";
 import type { CompanyBlueprint } from "../data/companyGenerator";
+import type { ProductType } from "../types";
 
-type Step = "enable-ai" | "idea" | "review" | "creating";
+type Step = "enable-ai" | "idea" | "designing" | "review" | "creating";
 
 export default function CompanyGeneratorPage() {
   const [step, setStep] = useState<Step>(isAIEnabled() ? "idea" : "enable-ai");
   const [idea, setIdea] = useState("");
+  const [productType, setProductType] = useState<ProductType>("shop");
   const [blueprint, setBlueprint] = useState<CompanyBlueprint | null>(null);
-  const [creationPromise, setCreationPromise] = useState<Promise<void> | null>(null);
   const createCompany = useWorkspaceStore((s) => s.createCompany);
   const navigate = useNavigate();
 
@@ -25,9 +27,22 @@ export default function CompanyGeneratorPage() {
   if (step === "idea") {
     return (
       <IdeaStep
-        onSubmit={(text) => {
+        onSubmit={(text, type) => {
           setIdea(text);
-          setBlueprint(buildBlueprintFromIdea(text));
+          setProductType(type);
+          setStep("designing");
+        }}
+      />
+    );
+  }
+
+  if (step === "designing") {
+    return (
+      <DesigningCompanyStep
+        idea={idea}
+        productType={productType}
+        onReady={(b) => {
+          setBlueprint(b);
           setStep("review");
         }}
       />
@@ -39,14 +54,14 @@ export default function CompanyGeneratorPage() {
       <BlueprintReviewStep
         initial={blueprint}
         onBack={() => setStep("idea")}
-        onConfirm={(finalBlueprint, hiredKeys) => {
+        onConfirm={(finalBlueprint) => {
           setBlueprint(finalBlueprint);
-          setCreationPromise(createCompany(finalBlueprint, idea, hiredKeys));
+          createCompany(finalBlueprint, idea);
           setStep("creating");
         }}
       />
     );
   }
 
-  return <CreationAnimationStep websiteReady={creationPromise} onComplete={() => navigate("/app")} />;
+  return <CreationAnimationStep onComplete={() => navigate("/app")} />;
 }

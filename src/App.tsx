@@ -7,13 +7,11 @@ import CompanyGeneratorPage from "./pages/CompanyGeneratorPage";
 import DashboardLayout from "./pages/DashboardLayout";
 import OverviewPage from "./pages/OverviewPage";
 import CompanyPage from "./pages/CompanyPage";
-import WorkforcePage from "./pages/WorkforcePage";
-import EmployeeDetailPage from "./pages/EmployeeDetailPage";
 import TasksPage from "./pages/TasksPage";
 import ApprovalsPage from "./pages/ApprovalsPage";
 import ActivityPage from "./pages/ActivityPage";
 import GoalsPage from "./pages/GoalsPage";
-import WebsiteBuilderPage from "./pages/WebsiteBuilderPage";
+import SitePage from "./pages/SitePage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import KnowledgePage from "./pages/KnowledgePage";
 import SettingsPage from "./pages/SettingsPage";
@@ -45,13 +43,11 @@ export default function App() {
       >
         <Route index element={<OverviewPage />} />
         <Route path="company" element={<CompanyPage />} />
-        <Route path="workforce" element={<WorkforcePage />} />
-        <Route path="workforce/:employeeId" element={<EmployeeDetailPage />} />
         <Route path="tasks" element={<TasksPage />} />
         <Route path="approvals" element={<ApprovalsPage />} />
         <Route path="activity" element={<ActivityPage />} />
         <Route path="goals" element={<GoalsPage />} />
-        <Route path="website" element={<WebsiteBuilderPage />} />
+        <Route path="site" element={<SitePage />} />
         <Route path="analytics" element={<AnalyticsPage />} />
         <Route path="knowledge" element={<KnowledgePage />} />
         <Route path="settings" element={<SettingsPage />} />

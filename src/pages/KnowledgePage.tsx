@@ -24,7 +24,7 @@ export default function KnowledgePage() {
       <SectionHeading
         eyebrow="Company Memory"
         title="Knowledge"
-        description="What your AI workforce knows about the company. Edit anything — it's stored locally in your browser."
+        description="What Mero knows about the company. Edit anything — it's stored locally in your browser."
       />
       <div className="grid gap-4 lg:grid-cols-2">
         {knowledge.map((doc) => (

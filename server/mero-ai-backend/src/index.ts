@@ -56,7 +56,7 @@ function jsonResponse(data: unknown, status: number, origin: string | null): Res
 function buildSystemPrompt(facts: Record<string, string>): string {
   const companyName = facts.companyName || "the company";
   const personaName = facts.personaName || "Mero";
-  const personaTitle = facts.personaTitle || "AI CEO";
+  const personaTitle = facts.personaTitle || "AI Assistant";
   const personaTone = facts.personaTone || "clear, honest, and helpful";
   const personaFocusAreas = facts.personaFocusAreas || "coordinating the company";
   const hasConnectedData = facts.hasConnectedData === "true";
@@ -72,7 +72,7 @@ function buildSystemPrompt(facts: Record<string, string>): string {
     !jsonMode && `Connected data sources: ${hasConnectedData ? "yes, real data is connected" : "none yet — never invent a specific revenue, customer, or traffic number"}.`,
     "",
     jsonMode
-      ? "You are generating structured data for a website builder. Reply with ONLY the requested JSON object — no markdown code fences, no commentary before or after it."
+      ? "You are generating structured data to design a new company. Reply with ONLY the requested JSON object — no markdown code fences, no commentary before or after it."
       : "Stay in character as this persona. Reply in 2-5 sentences unless the user clearly wants more detail.",
     !jsonMode && "If asked about a metric that requires connected data you don't have, say so honestly instead of making up a number.",
     !jsonMode && "If asked to take a consequential action (spend money, publish content, send email or a campaign, change pricing), explain that it would go through Mero's Approval Center rather than claiming you already did it.",
@@ -116,14 +116,15 @@ async function handleChat(request: Request, env: Env, origin: string | null): Pr
   const anthropic = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
 
   try {
-    // Note: max_tokens is kept modest since chat replies are short (2-5
-    // sentences per the system prompt) — this bounds latency and cost per
-    // message. Effort tuning (output_config.effort) is available on the beta
+    // Note: max_tokens covers both short chat replies (2-5 sentences) and the
+    // much larger structured-JSON company-design generation (facts.responseFormat
+    // === "json"), which needs headroom for a full brand/offerings/site-copy
+    // object. Effort tuning (output_config.effort) is available on the beta
     // Messages API if you want to trade quality for lower cost; omitted here
     // to keep this reference backend on the stable, non-beta endpoint.
     const response = await anthropic.messages.create({
       model: env.MERO_MODEL || DEFAULT_MODEL,
-      max_tokens: 1024,
+      max_tokens: facts.responseFormat === "json" ? 2048 : 1024,
       system: buildSystemPrompt(facts),
       messages: [
         ...history

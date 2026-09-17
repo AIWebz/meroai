@@ -31,7 +31,7 @@ export function BackendCard() {
     try {
       const provider = new BackendAIProvider(urlDraft.trim(), secretDraft.trim());
       const res = await provider.chat("Reply with a short greeting to confirm the connection is working.", {
-        personaId: "ceo",
+        personaId: "assistant",
         facts: { companyName: "Mero" },
       });
       setTestResult("success");

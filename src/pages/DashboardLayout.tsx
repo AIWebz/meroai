@@ -8,11 +8,10 @@ import { useUIStore } from "../store/useUIStore";
 const TITLES: Record<string, string> = {
   "/app": "Overview",
   "/app/company": "Company",
-  "/app/workforce": "Workforce",
   "/app/tasks": "Tasks",
   "/app/approvals": "Approvals",
   "/app/activity": "Activity",
-  "/app/website": "Website",
+  "/app/site": "Site",
   "/app/analytics": "Analytics",
   "/app/knowledge": "Knowledge",
   "/app/settings": "Settings",
@@ -22,7 +21,7 @@ export default function DashboardLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const setCommandBarOpen = useUIStore((s) => s.setCommandBarOpen);
   const location = useLocation();
-  const title = TITLES[location.pathname] ?? (location.pathname.startsWith("/app/workforce/") ? "Employee" : "Mero");
+  const title = TITLES[location.pathname] ?? "Mero";
 
   return (
     <div className="flex min-h-screen bg-paper">

@@ -1,14 +1,16 @@
 import { useState } from "react";
 import { Check, Pencil } from "lucide-react";
-import { SectionHeading, Card, Input, TextArea, Button, DemoTag } from "../components/ui";
+import { SectionHeading, Card, Input, TextArea, Button, DemoTag, Badge } from "../components/ui";
 import { useWorkspaceStore } from "../store/useWorkspaceStore";
 import { OfferingPaymentLink } from "../features/company/OfferingPaymentLink";
+import { CompanyLogoMark } from "../components/CompanyLogoMark";
 
 export default function CompanyPage() {
   const company = useWorkspaceStore((s) => s.company)!;
   const updateCompany = useWorkspaceStore((s) => s.updateCompany);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(company);
+  const offeringsLabel = company.productType === "tool" ? "Plans" : "Products & Services";
 
   function startEdit() {
     setDraft(company);
@@ -21,6 +23,11 @@ export default function CompanyPage() {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <CompanyLogoMark name={company.name} colors={company.brand.colors} size={52} radius={14} />
+        <Badge tone="neutral" className="capitalize">{company.productType}</Badge>
+      </div>
+
       <SectionHeading
         eyebrow={company.industry}
         title={company.name}
@@ -103,7 +110,7 @@ export default function CompanyPage() {
       </Card>
 
       <Card className="p-6">
-        <h2 className="font-display text-[16px] font-semibold text-ink">Products & Services</h2>
+        <h2 className="font-display text-[16px] font-semibold text-ink">{offeringsLabel}</h2>
         <div className="mt-4 space-y-3">
           {company.offerings.map((o) => (
             <div key={o.id} className="rounded-xl border border-line p-4">

@@ -2,14 +2,14 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import clsx from "clsx";
 import { Sparkles } from "lucide-react";
-import { SectionHeading, Badge, Button, Card, Field, Input } from "../components/ui";
+import { SectionHeading, Badge, Card, Field, Input } from "../components/ui";
 import { useWorkspaceStore } from "../store/useWorkspaceStore";
 import { useUIStore } from "../store/useUIStore";
 import { LocalModelCard } from "../features/ai/LocalModelCard";
 import { BackendCard } from "../features/ai/BackendCard";
 import { useAIStatus } from "../features/ai/useAIStatus";
 
-const TABS = ["Account", "Company", "Workforce", "AI", "Notifications", "Appearance"] as const;
+const TABS = ["Account", "Company", "AI", "Notifications", "Appearance"] as const;
 type Tab = (typeof TABS)[number];
 
 export default function SettingsPage() {
@@ -35,7 +35,6 @@ export default function SettingsPage() {
 
       {tab === "Account" && <AccountTab />}
       {tab === "Company" && <CompanyTab />}
-      {tab === "Workforce" && <WorkforceTab />}
       {tab === "AI" && <AITab />}
       {tab === "Notifications" && <NotificationsTab />}
       {tab === "Appearance" && <AppearanceTab />}
@@ -74,30 +73,6 @@ function CompanyTab() {
           {["USD", "EUR", "GBP", "CAD"].map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
       </Field>
-    </Card>
-  );
-}
-
-function WorkforceTab() {
-  const allEmployees = useWorkspaceStore((s) => s.employees);
-  const employees = allEmployees.filter((e) => e.isHired);
-  const pauseEmployee = useWorkspaceStore((s) => s.pauseEmployee);
-  const activateEmployee = useWorkspaceStore((s) => s.activateEmployee);
-  return (
-    <Card className="max-w-lg divide-y divide-line p-2">
-      {employees.map((e) => (
-        <div key={e.id} className="flex items-center justify-between px-4 py-3">
-          <div>
-            <p className="text-[13.5px] font-medium text-ink">{e.name}</p>
-            <p className="text-[12px] text-ink-faint">{e.title}</p>
-          </div>
-          {e.status === "paused" ? (
-            <Button size="sm" variant="secondary" onClick={() => activateEmployee(e.id)}>Resume</Button>
-          ) : (
-            <Button size="sm" variant="ghost" onClick={() => pauseEmployee(e.id)}>Pause</Button>
-          )}
-        </div>
-      ))}
     </Card>
   );
 }
@@ -147,7 +122,7 @@ function NotificationsTab() {
   const rows: { key: keyof typeof settings; label: string }[] = [
     { key: "notifyOnApprovalNeeded", label: "Notify me when something needs approval" },
     { key: "notifyOnTaskFailed", label: "Notify me when a task fails" },
-    { key: "notifyOnDailyBriefing", label: "Send me the daily AI CEO briefing" },
+    { key: "notifyOnDailyBriefing", label: "Send me the daily briefing" },
   ];
   return (
     <Card className="max-w-lg divide-y divide-line p-2">

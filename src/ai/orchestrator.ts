@@ -1,11 +1,11 @@
 import type { AIProvider, AIRequestContext } from "./provider";
 import { demoProvider } from "./demoProvider";
-import type { Activity, Approval, Company, Employee, Opportunity, Task } from "../types";
+import type { Activity, Approval, Company, Opportunity, Task } from "../types";
 
 // ---------------------------------------------------------------------------
 // AIOrchestrator
 //
-//   AIProvider -> AIOrchestrator -> AI CEO / AI Employees -> Tasks
+//   AIProvider -> AIOrchestrator -> Mero's assistant chat
 //
 // The orchestrator is the only thing the UI talks to for conversational
 // replies. It's a thin wrapper — which provider it holds (demo or a live
@@ -30,8 +30,8 @@ export class AIOrchestrator {
 }
 
 // ---------------------------------------------------------------------------
-// Daily AI CEO briefing. This is deliberately NOT a model call — it's a
-// direct summary of real local workspace state, so it's always labeled as
+// Daily briefing. This is deliberately NOT a model call — it's a direct
+// summary of real local workspace state, so it's always labeled as
 // demo/template content regardless of whether live AI is connected. It never
 // fabricates a number that isn't present in the data passed to it.
 // ---------------------------------------------------------------------------
@@ -49,37 +49,27 @@ export interface Briefing {
 
 export function generateBriefing(input: {
   company: Company;
-  employees: Employee[];
   tasks: Task[];
   approvals: Approval[];
   activity: Activity[];
   opportunities: Opportunity[];
 }): Briefing {
-  const { employees, tasks, approvals, activity, opportunities } = input;
-  const hired = employees.filter((e) => e.isHired);
+  const { tasks, approvals, activity, opportunities } = input;
 
-  const completedToday = tasks.filter((t) => t.status === "completed");
+  const completed = tasks.filter((t) => t.status === "completed");
   const failed = tasks.filter((t) => t.status === "failed");
   const pendingApprovals = approvals.filter((a) => a.status === "pending");
   const activeOpportunities = opportunities.filter((o) => !o.dismissed);
-  const recentActivity = [...activity]
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-    .slice(0, 5);
+  const recentActivity = [...activity].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 5);
 
   const sections: BriefingSection[] = [
     {
       heading: "What happened",
-      items:
-        recentActivity.length > 0
-          ? recentActivity.map((a) => a.title)
-          : ["No activity yet — your AI workforce hasn't started working."],
+      items: recentActivity.length > 0 ? recentActivity.map((a) => a.title) : ["No activity yet."],
     },
     {
-      heading: "What the workforce completed",
-      items:
-        completedToday.length > 0
-          ? completedToday.slice(0, 5).map((t) => `${t.title} (${hired.find((e) => e.id === t.employeeId)?.name ?? "Employee"})`)
-          : ["Nothing completed yet."],
+      heading: "Completed",
+      items: completed.length > 0 ? completed.slice(0, 5).map((t) => t.title) : ["Nothing completed yet."],
     },
     {
       heading: "Problems detected",
@@ -94,10 +84,7 @@ export function generateBriefing(input: {
     },
     {
       heading: "Approvals needed",
-      items:
-        pendingApprovals.length > 0
-          ? pendingApprovals.map((a) => a.title)
-          : ["Nothing waiting on you right now."],
+      items: pendingApprovals.length > 0 ? pendingApprovals.map((a) => a.title) : ["Nothing waiting on you right now."],
     },
     {
       heading: "Recommended next actions",
@@ -110,18 +97,12 @@ export function generateBriefing(input: {
   return { generatedAt: new Date().toISOString(), isDemo: true, sections };
 }
 
-function buildRecommendations(input: {
-  employees: Employee[];
-  tasks: Task[];
-  approvals: Approval[];
-  opportunities: Opportunity[];
-}): string[] {
+function buildRecommendations(input: { company: Company; tasks: Task[]; approvals: Approval[]; opportunities: Opportunity[] }): string[] {
   const recs: string[] = [];
-  const hired = input.employees.filter((e) => e.isHired);
-  if (hired.length === 0) recs.push("Hire your first AI employee to start operating.");
+  if (!input.company.github) recs.push("Publish your site to GitHub when you're ready to go live.");
   if (input.approvals.some((a) => a.status === "pending")) recs.push("Review pending approvals.");
   if (input.opportunities.some((o) => !o.dismissed)) recs.push("Review detected opportunities.");
-  if (input.tasks.length === 0) recs.push("Assign your workforce their first task.");
-  if (recs.length === 0) recs.push("Everything looks on track — check back after your team completes more work.");
+  if (input.tasks.length === 0) recs.push("Add your first task to start tracking what's next.");
+  if (recs.length === 0) recs.push("Everything looks on track.");
   return recs;
 }

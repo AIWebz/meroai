@@ -7,15 +7,15 @@ import { DemoTag } from "./ui";
 
 const EXAMPLES = [
   "What should I focus on today?",
-  "Create a marketing task",
+  "Help me name a new product",
   "What opportunities do we have?",
-  "Show me what my AI workforce did",
+  "How do I publish my site?",
 ];
 
 export function CommandBar() {
   const open = useUIStore((s) => s.commandBarOpen);
   const setOpen = useUIStore((s) => s.setCommandBarOpen);
-  const { messages, send, sending } = useAIChat("ceo", "ceo");
+  const { messages, send, sending } = useAIChat();
   const [draft, setDraft] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
@@ -105,7 +105,7 @@ export function CommandBar() {
             }}
             className="text-[12.5px] font-medium text-moss-600 hover:text-moss-700"
           >
-            Open AI CEO
+            Open full chat
           </button>
           <button
             onClick={submit}

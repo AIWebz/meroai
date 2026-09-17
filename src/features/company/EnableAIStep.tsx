@@ -22,8 +22,8 @@ export function EnableAIStep({ onContinue }: { onContinue: () => void }) {
             Turn on Mero's AI
           </h1>
           <p className="mt-3 text-[15px] text-ink-faint">
-            Mero's AI CEO and workforce write your company's brand and website copy for real — there's no
-            simulated fallback for that part. Enable one AI option below before you continue.
+            Mero's AI designs your company's brand, offerings, and site for real — there's no simulated fallback
+            for that part. Enable one AI option below before you continue.
           </p>
         </div>
 

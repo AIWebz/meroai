@@ -29,7 +29,6 @@ const PRIORITY_TONE: Record<Task["priority"], string> = {
 };
 
 export function TaskCard({ task }: { task: Task }) {
-  const employee = useWorkspaceStore((s) => s.employees.find((e) => e.id === task.employeeId));
   const startTask = useWorkspaceStore((s) => s.startTask);
   const completeTask = useWorkspaceStore((s) => s.completeTask);
   const failTask = useWorkspaceStore((s) => s.failTask);
@@ -48,16 +47,7 @@ export function TaskCard({ task }: { task: Task }) {
       </div>
 
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-3">
-        <div className="flex items-center gap-2 text-[12px] text-ink-faint">
-          {employee && (
-            <span className="flex items-center gap-1.5">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-paper-dim text-[10px] font-semibold text-ink-soft">{employee.avatarGlyph}</span>
-              {employee.name}
-            </span>
-          )}
-          <span>·</span>
-          <span>{formatDate(task.createdAt)}</span>
-        </div>
+        <span className="text-[12px] text-ink-faint">{formatDate(task.createdAt)}</span>
         <div className="flex gap-1.5">
           {task.status === "pending" && (
             <Button size="sm" variant="secondary" onClick={() => startTask(task.id)}>Start</Button>

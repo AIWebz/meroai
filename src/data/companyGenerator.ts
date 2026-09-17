@@ -1,15 +1,29 @@
-import type { BrandIdentity, BusinessModel, CompanyGoalSummary, EmployeeRoleKey, Offering } from "../types";
-import { EMPLOYEE_CATALOG } from "./employeeCatalog";
+import type { BrandIdentity, BusinessModel, CompanyGoalSummary, Offering, ProductType } from "../types";
+import type { AICompanyContent } from "../ai/generateCompanyWithAI";
 
 // ---------------------------------------------------------------------------
 // Company blueprint generator
 //
 // This is a deliberately simple, deterministic, rule-based text generator —
-// NOT a call to a language model. It exists so the static/demo build can
-// showcase the full "describe an idea, get a company" experience honestly.
-// A live AI backend can later replace `generateBlueprint` with a real model
-// call; the shape it returns (CompanyBlueprint) stays the same.
+// NOT a call to a language model. It runs first, instantly, as a robust
+// fallback base; the live AI (see ai/generateCompanyWithAI.ts) then overrides
+// whichever fields it successfully generates on top of it. If AI generation
+// fails entirely, this deterministic draft is what the user reviews — so the
+// flow never breaks, even though live AI is required to get here.
 // ---------------------------------------------------------------------------
+
+export interface SiteCopy {
+  heroHeadline: string;
+  heroSubheadline: string;
+  aboutHeading: string;
+  aboutText: string;
+  featuresHeading: string;
+  features: { title: string; description: string }[];
+  faqHeading: string;
+  faq: { question: string; answer: string }[];
+  ctaHeading: string;
+  ctaSubheading: string;
+}
 
 export interface CompanyBlueprint {
   name: string;
@@ -17,11 +31,13 @@ export interface CompanyBlueprint {
   description: string;
   industry: string;
   businessModel: BusinessModel;
+  productType: ProductType;
   targetAudience: string;
   brand: BrandIdentity;
   offerings: Offering[];
   goalSummary: CompanyGoalSummary;
-  recommendedEmployeeKeys: EmployeeRoleKey[];
+  /** Present once AI (or the deterministic fallback) has produced website copy. */
+  siteCopy: SiteCopy;
 }
 
 interface IndustryProfile {
@@ -197,7 +213,7 @@ function generateName(idea: string, subject: string): string {
   return useKeyWord ? `${keyWord} ${suffix}` : `${prefix} ${suffix}`;
 }
 
-export function generateBlueprint(idea: string): CompanyBlueprint {
+export function generateBlueprint(idea: string, productType: ProductType): CompanyBlueprint {
   const trimmedIdea = idea.trim();
   const profile = detectProfile(trimmedIdea);
   const subject = extractSubject(trimmedIdea);
@@ -205,25 +221,28 @@ export function generateBlueprint(idea: string): CompanyBlueprint {
 
   const tagline = `${capitalize(subject)}, built for people who care about the details.`;
 
-  const description = `${name} is a ${profile.businessModel === "saas" ? "software" : profile.businessModel} company built around: "${trimmedIdea}". It serves ${profile.audience.toLowerCase()}.`;
+  const businessModel: BusinessModel = productType === "tool" ? "saas" : profile.businessModel === "saas" ? "ecommerce" : profile.businessModel;
 
-  const offerings: Offering[] = buildOfferings(profile, subject);
+  const description = `${name} is a ${businessModel === "saas" ? "software" : businessModel} company built around: "${trimmedIdea}". It serves ${profile.audience.toLowerCase()}.`;
+
+  const offerings: Offering[] = buildOfferings(productType, subject);
 
   const goalSummary: CompanyGoalSummary = {
-    launch: "Launch the website and first offering within 30 days.",
+    launch: `Launch your ${productType} and first offering within 30 days.`,
     customer: "Reach your first 10 customers.",
     revenue: "Reach $1,000 in monthly revenue.",
     growth: "Establish a repeatable channel for new customers.",
   };
 
-  const recommendedEmployeeKeys = recommendEmployees(trimmedIdea, profile);
+  const siteCopy = fallbackSiteCopy(name, tagline, description, offerings, goalSummary, productType);
 
   return {
     name,
     tagline,
     description,
     industry: profile.industry,
-    businessModel: profile.businessModel,
+    businessModel,
+    productType,
     targetAudience: profile.audience,
     brand: {
       personality: profile.personality,
@@ -233,51 +252,85 @@ export function generateBlueprint(idea: string): CompanyBlueprint {
     },
     offerings,
     goalSummary,
-    recommendedEmployeeKeys,
+    siteCopy,
   };
 }
 
-function buildOfferings(profile: IndustryProfile, subject: string): Offering[] {
+function buildOfferings(productType: ProductType, subject: string): Offering[] {
   const base = capitalize(subject.split(" ").slice(-2).join(" ")) || "Core Offering";
-  if (profile.businessModel === "saas") {
+  if (productType === "tool") {
     return [
-      { id: "off_1", name: "Starter Plan", description: `Core access to ${base}.`, pricingConcept: "$19/month", positioning: "For individuals and small teams getting started." },
-      { id: "off_2", name: "Pro Plan", description: `Full feature set for teams relying on ${base}.`, pricingConcept: "$49/month", positioning: "For growing teams that need more control." },
-    ];
-  }
-  if (profile.businessModel === "subscription") {
-    return [
-      { id: "off_1", name: "Membership", description: `Ongoing access to ${base}.`, pricingConcept: "$15/month", positioning: "For people who want continuous value, not a one-off purchase." },
-    ];
-  }
-  if (profile.businessModel === "services") {
-    return [
-      { id: "off_1", name: "Engagement", description: `A scoped engagement delivering ${base}.`, pricingConcept: "Starting at $2,500", positioning: "For businesses that need expert execution without hiring in-house." },
+      { id: "off_1", name: "Free", description: `Try the core of ${base} at no cost.`, pricingConcept: "$0", positioning: "For individuals getting started." },
+      { id: "off_2", name: "Pro", description: `Full access to ${base} with no limits.`, pricingConcept: "$19/month", positioning: "For people and teams who rely on it daily." },
     ];
   }
   return [
-    { id: "off_1", name: base, description: `The flagship offering built around ${base.toLowerCase()}.`, pricingConcept: "$45", positioning: "An accessible entry point that reflects the brand's quality." },
+    { id: "off_1", name: base, description: `The flagship product built around ${base.toLowerCase()}.`, pricingConcept: "$45", positioning: "An accessible entry point that reflects the brand's quality." },
     { id: "off_2", name: `${base} — Premium`, description: `An elevated version of ${base.toLowerCase()} for the highest-intent customers.`, pricingConcept: "$95", positioning: "For customers who want the best available option." },
   ];
 }
 
-function recommendEmployees(idea: string, profile: IndustryProfile): EmployeeRoleKey[] {
-  const lower = idea.toLowerCase();
-  const scored = EMPLOYEE_CATALOG.filter((e) => e.roleKey !== "ceo").map((entry) => {
-    const score =
-      (entry.alwaysRecommend ? 2 : 0) +
-      entry.relevanceKeywords.filter((k) => lower.includes(k) || profile.industry.toLowerCase().includes(k)).length;
-    return { entry, score };
-  });
-  const picked = scored
-    .filter((s) => s.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 4)
-    .map((s) => s.entry.roleKey);
+function fallbackSiteCopy(
+  name: string,
+  tagline: string,
+  description: string,
+  offerings: Offering[],
+  goalSummary: CompanyGoalSummary,
+  productType: ProductType
+): SiteCopy {
+  return {
+    heroHeadline: name,
+    heroSubheadline: tagline,
+    aboutHeading: "About",
+    aboutText: description,
+    featuresHeading: productType === "tool" ? "Why " + name : "Why shop " + name,
+    features: offerings.map((o) => ({ title: o.name, description: o.description })),
+    faqHeading: "Frequently asked questions",
+    faq: [{ question: `What does ${name} offer?`, answer: offerings[0]?.description ?? "Our core offering." }],
+    ctaHeading: "Ready to get started?",
+    ctaSubheading: goalSummary.customer,
+  };
+}
 
-  // Always include CEO, and guarantee marketing since every company needs it.
-  const keys = new Set<EmployeeRoleKey>(["ceo", "marketing", ...picked]);
-  return Array.from(keys);
+/** Overlays whatever fields the live AI successfully generated onto the deterministic draft. Missing/invalid AI fields keep the deterministic value — never a blank. */
+export function applyAIContent(blueprint: CompanyBlueprint, ai: AICompanyContent | null): CompanyBlueprint {
+  if (!ai) return blueprint;
+  return {
+    ...blueprint,
+    name: ai.name || blueprint.name,
+    tagline: ai.tagline || blueprint.tagline,
+    description: ai.description || blueprint.description,
+    industry: ai.industry || blueprint.industry,
+    targetAudience: ai.targetAudience || blueprint.targetAudience,
+    businessModel: ai.businessModel ?? blueprint.businessModel,
+    brand: {
+      personality: ai.brandPersonality?.length ? ai.brandPersonality : blueprint.brand.personality,
+      voice: ai.brandVoice || blueprint.brand.voice,
+      colors: ai.brandColors?.length ? ai.brandColors : blueprint.brand.colors,
+      logoConcept: ai.logoConcept || blueprint.brand.logoConcept,
+    },
+    offerings: ai.offerings?.length
+      ? ai.offerings.map((o, i) => ({ id: blueprint.offerings[i]?.id ?? `off_${i + 1}`, ...o }))
+      : blueprint.offerings,
+    goalSummary: {
+      launch: ai.goalLaunch || blueprint.goalSummary.launch,
+      customer: ai.goalCustomer || blueprint.goalSummary.customer,
+      revenue: ai.goalRevenue || blueprint.goalSummary.revenue,
+      growth: ai.goalGrowth || blueprint.goalSummary.growth,
+    },
+    siteCopy: {
+      heroHeadline: ai.heroHeadline || blueprint.siteCopy.heroHeadline,
+      heroSubheadline: ai.heroSubheadline || blueprint.siteCopy.heroSubheadline,
+      aboutHeading: ai.aboutHeading || blueprint.siteCopy.aboutHeading,
+      aboutText: ai.aboutText || blueprint.siteCopy.aboutText,
+      featuresHeading: ai.featuresHeading || blueprint.siteCopy.featuresHeading,
+      features: ai.features?.length ? ai.features : blueprint.siteCopy.features,
+      faqHeading: ai.faqHeading || blueprint.siteCopy.faqHeading,
+      faq: ai.faq?.length ? ai.faq : blueprint.siteCopy.faq,
+      ctaHeading: ai.ctaHeading || blueprint.siteCopy.ctaHeading,
+      ctaSubheading: ai.ctaSubheading || blueprint.siteCopy.ctaSubheading,
+    },
+  };
 }
 
 function capitalize(s: string): string {
@@ -286,9 +339,9 @@ function capitalize(s: string): string {
 }
 
 export const SUGGESTED_PROMPTS = [
-  "I want to build a premium dog travel accessories company for modern pet owners.",
-  "A subscription coffee company that sources direct-trade beans from small farms.",
+  "I want to build a premium dog travel accessories shop for modern pet owners.",
+  "A subscription coffee shop that sources direct-trade beans from small farms.",
   "A SaaS tool that helps freelance designers send better client proposals.",
-  "A marketplace connecting local bakers with people hosting events.",
+  "A tool that helps small teams track project time and generate invoices.",
   "An online course platform that teaches trades skills to career switchers.",
 ];

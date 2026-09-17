@@ -12,7 +12,7 @@ import { getOrCreateEngine } from "./localModel/engine";
 
 const MAX_HISTORY_MESSAGES = 8;
 const CHAT_MAX_TOKENS = 300;
-const JSON_MAX_TOKENS = 900;
+const JSON_MAX_TOKENS = 1600;
 
 export class LocalModelAIProvider implements AIProvider {
   readonly id = "local-model";

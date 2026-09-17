@@ -1,7 +1,7 @@
 // ---------------------------------------------------------------------------
 // Mero data models
 //
-// These types describe the full product surface (company, workforce, tasks,
+// These types describe the full product surface (company, tasks,
 // approvals, goals, website, knowledge...) independent of how
 // they are persisted. Today they are stored in the browser (see src/store).
 // A future backend can serialize/deserialize the same shapes over an API
@@ -29,6 +29,9 @@ export type BusinessModel =
   | "content"
   | "other";
 
+/** What the user is building. Determines how the generated site presents itself and its offerings. */
+export type ProductType = "tool" | "shop";
+
 export interface BrandIdentity {
   personality: string[]; // e.g. ["Premium", "Warm", "Confident"]
   voice: string; // short description of tone/voice
@@ -53,6 +56,12 @@ export interface CompanyGoalSummary {
   growth: string;
 }
 
+export interface GithubPublishInfo {
+  repoUrl: string;
+  pagesUrl: string;
+  publishedAt: string;
+}
+
 export interface Company {
   id: ID;
   name: string;
@@ -60,6 +69,7 @@ export interface Company {
   description: string;
   industry: string;
   businessModel: BusinessModel;
+  productType: ProductType;
   targetAudience: string;
   originalIdea: string;
   brand: BrandIdentity;
@@ -67,6 +77,7 @@ export interface Company {
   goalSummary: CompanyGoalSummary;
   createdAt: string;
   isDemo: boolean;
+  github: GithubPublishInfo | null;
 }
 
 export interface CompanySettings {
@@ -79,61 +90,11 @@ export interface CompanySettings {
   notifyOnDailyBriefing: boolean;
 }
 
-// --- Workforce -----------------------------------------------------------
-
-export type EmployeeRoleKey =
-  | "ceo"
-  | "sales"
-  | "marketing"
-  | "support"
-  | "research"
-  | "analyst"
-  | "developer"
-  | "operations";
-
-export type EmployeeStatus = "active" | "idle" | "working" | "paused";
-
-export type EmployeePermission =
-  | "view_company_data"
-  | "edit_website"
-  | "publish_website"
-  | "send_email"
-  | "send_bulk_email"
-  | "manage_campaigns"
-  | "spend_budget"
-  | "change_pricing"
-  | "manage_tasks"
-  | "respond_to_customers"
-  | "access_integrations";
-
-export interface EmployeeMemoryEntry {
-  id: ID;
-  createdAt: string;
-  summary: string;
-}
-
-export type EmployeeMemory = EmployeeMemoryEntry[];
-
-export interface Employee {
-  id: ID;
-  companyId: ID;
-  roleKey: EmployeeRoleKey;
-  name: string;
-  title: string;
-  avatarGlyph: string; // single letter / icon key used for the avatar
-  status: EmployeeStatus;
-  goal: string;
-  currentTask: string | null;
-  permissions: EmployeePermission[];
-  tasksCompleted: number;
-  hiredAt: string;
-  isHired: boolean; // recommended employees exist as "not yet hired"
-  memory: EmployeeMemory;
-}
+// --- Chat -----------------------------------------------------------
 
 export interface ChatMessage {
   id: ID;
-  threadId: ID; // 'ceo' or an employee id
+  threadId: ID; // always "assistant" — a single AI helper, not per-employee threads
   role: "user" | "assistant";
   content: string;
   createdAt: string;
@@ -152,21 +113,11 @@ export type TaskStatus =
 
 export type TaskPriority = "low" | "medium" | "high" | "urgent";
 
-export interface TaskRun {
-  id: ID;
-  taskId: ID;
-  startedAt: string;
-  finishedAt: string | null;
-  outcome: "success" | "failure" | null;
-  log: string[];
-}
-
 export interface Task {
   id: ID;
   companyId: ID;
   title: string;
   description: string;
-  employeeId: ID;
   status: TaskStatus;
   priority: TaskPriority;
   createdAt: string;
@@ -174,7 +125,6 @@ export interface Task {
   result: string | null;
   requiresApproval: boolean;
   approvalId: ID | null;
-  runs: TaskRun[];
 }
 
 // --- Approvals -----------------------------------------------------------
@@ -185,7 +135,6 @@ export type ApprovalKind =
   | "publish_campaign"
   | "send_campaign"
   | "change_pricing"
-  | "publish_website"
   | "send_bulk_email"
   | "spend_budget"
   | "delete_content"
@@ -195,7 +144,6 @@ export interface Approval {
   id: ID;
   companyId: ID;
   taskId: ID | null;
-  employeeId: ID;
   kind: ApprovalKind;
   title: string;
   reason: string;
@@ -214,18 +162,17 @@ export type ActivityKind =
   | "approval_requested"
   | "approval_approved"
   | "approval_rejected"
-  | "employee_hired"
   | "goal_created"
   | "goal_updated"
   | "website_edited"
   | "company_created"
+  | "company_published"
   | "opportunity_detected"
   | "payment_connected";
 
 export interface Activity {
   id: ID;
   companyId: ID;
-  employeeId: ID | null; // null = system/Mero-level event
   kind: ActivityKind;
   title: string;
   description: string;
@@ -258,7 +205,6 @@ export interface Opportunity {
   title: string;
   description: string;
   recommendedAction: string;
-  relatedEmployeeId: ID | null;
   requiresIntegration: boolean;
   isDemo: boolean;
   createdAt: string;

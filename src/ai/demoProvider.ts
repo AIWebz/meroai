@@ -1,5 +1,5 @@
 import type { AIProvider, AIRequestContext, AIResponse } from "./provider";
-import { personaFor } from "./personas";
+import { ASSISTANT_PERSONA } from "./personas";
 
 function includesAny(text: string, needles: string[]): boolean {
   const lower = text.toLowerCase();
@@ -17,7 +17,7 @@ export class DemoAIProvider implements AIProvider {
   readonly isLive = false;
 
   async chat(message: string, context: AIRequestContext): Promise<AIResponse> {
-    const persona = personaFor(context.personaId);
+    const persona = ASSISTANT_PERSONA;
     const facts = context.facts ?? {};
     const hasConnectedData = facts.hasConnectedData === "true";
     const companyName = facts.companyName ?? "your company";
@@ -40,10 +40,10 @@ export class DemoAIProvider implements AIProvider {
       content = hasConnectedData
         ? `I'll keep scanning for patterns worth acting on and surface anything meaningful in the Opportunity Engine.`
         : `Opportunity detection needs real signal to work from — right now there's no connected data to analyze. Once you connect an integration, I'll start surfacing real opportunities instead of guesses.`;
-    } else if (includesAny(message, ["hire", "employee", "workforce", "team"])) {
-      content = `I recommend employees based on what ${companyName} actually needs — you can review and hire them from the Workforce page. I won't add anyone automatically.`;
-    } else if (includesAny(message, ["website", "landing page", "site"])) {
-      content = `I can help shape the website from here, but detailed edits — layout, copy, sections — are best done in the Website Builder, where I can apply changes directly to the page.`;
+    } else if (includesAny(message, ["publish", "github", "go live", "deploy"])) {
+      content = `You can publish ${companyName}'s site to your own GitHub account from the Site page — it pushes real static files and turns on GitHub Pages using a personal access token you provide.`;
+    } else if (includesAny(message, ["website", "landing page", "site", "logo", "brand"])) {
+      content = `Your site's copy and brand were generated when ${companyName} was created. You can edit the structured details — name, brand, offerings — from the Company page, and preview or publish the site from the Site page.`;
     } else if (includesAny(message, ["hello", "hi", "hey"])) {
       content = persona.greeting(companyName);
     } else {

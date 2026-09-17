@@ -12,7 +12,8 @@
 //
 // src/ai/resolveProvider.ts picks between them based on whether the user has
 // configured a backend URL in Settings > AI. Nothing above this seam —
-// AIOrchestrator, employee chat, the AI CEO — needs to know which one is active.
+// AIOrchestrator, the company generator, Mero's assistant chat — needs to
+// know which one is active.
 // ---------------------------------------------------------------------------
 
 export interface AIMessage {
@@ -21,7 +22,7 @@ export interface AIMessage {
 }
 
 export interface AIRequestContext {
-  /** Which persona is answering: 'ceo' or an employee role key. */
+  /** Which persona is answering. Always 'assistant' today. */
   personaId: string;
   /** Freeform facts the provider may use to ground its answer (company info, etc). */
   facts?: Record<string, string>;

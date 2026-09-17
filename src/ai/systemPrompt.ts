@@ -14,7 +14,7 @@
 export function buildSystemPrompt(facts: Record<string, string>): string {
   const companyName = facts.companyName || "the company";
   const personaName = facts.personaName || "Mero";
-  const personaTitle = facts.personaTitle || "AI CEO";
+  const personaTitle = facts.personaTitle || "AI Assistant";
   const personaTone = facts.personaTone || "clear, honest, and helpful";
   const personaFocusAreas = facts.personaFocusAreas || "coordinating the company";
   const hasConnectedData = facts.hasConnectedData === "true";
@@ -30,7 +30,7 @@ export function buildSystemPrompt(facts: Record<string, string>): string {
     !jsonMode && `Connected data sources: ${hasConnectedData ? "yes, real data is connected" : "none yet — never invent a specific revenue, customer, or traffic number"}.`,
     "",
     jsonMode
-      ? "You are generating structured data for a website builder. Reply with ONLY the requested JSON object — no markdown code fences, no commentary before or after it."
+      ? "You are generating structured data to design a new company. Reply with ONLY the requested JSON object — no markdown code fences, no commentary before or after it."
       : "Stay in character as this persona. Reply in 2-5 sentences unless the user clearly wants more detail.",
     !jsonMode && "If asked about a metric that requires connected data you don't have, say so honestly instead of making up a number.",
     !jsonMode && "If asked to take a consequential action (spend money, publish content, send email or a campaign, change pricing), explain that it would go through Mero's Approval Center rather than claiming you already did it.",

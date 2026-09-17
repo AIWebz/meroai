@@ -6,7 +6,6 @@ export default function AnalyticsPage() {
   const allOpportunities = useWorkspaceStore((s) => s.opportunities);
   const opportunities = allOpportunities.filter((o) => !o.dismissed);
   const dismissOpportunity = useWorkspaceStore((s) => s.dismissOpportunity);
-  const employees = useWorkspaceStore((s) => s.employees);
 
   return (
     <div className="space-y-8">
@@ -28,7 +27,6 @@ export default function AnalyticsPage() {
         ) : (
           <div className="space-y-3">
             {opportunities.map((o) => {
-              const employee = employees.find((e) => e.id === o.relatedEmployeeId);
               return (
                 <Card key={o.id} className="p-5">
                   <div className="flex items-start justify-between gap-3">
@@ -46,7 +44,7 @@ export default function AnalyticsPage() {
                     <p className="mt-0.5 text-[13px] text-ink-soft">{o.recommendedAction}</p>
                   </div>
                   <div className="mt-3 flex items-center justify-between">
-                    <span className="text-[12px] text-ink-faint">{employee ? `Flagged by ${employee.name}` : "Flagged by Mero"}</span>
+                    <span className="text-[12px] text-ink-faint">Flagged by Mero</span>
                     {o.requiresIntegration ? (
                       <span className="text-[12.5px] font-medium text-ink-faint">Needs connected data</span>
                     ) : (
